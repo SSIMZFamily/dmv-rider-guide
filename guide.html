@@ -109,6 +109,7 @@ var CATS=[
  {id:'all',label:'All'},
  {id:'food',label:'Eat'},
  {id:'halal',label:'Halal or Desi'},
+ {id:'pakistani',label:'Pakistani'},
  {id:'cafe',label:'Coffee and sweets'},
  {id:'do',label:'Things to do'},
  {id:'free',label:'Free outdoors'}
@@ -139,6 +140,7 @@ function inCat(p){
   if(cat==='all')return true;
   if(cat==='food')return p.kind==='food';
   if(cat==='halal')return p.halal;
+  if(cat==='pakistani')return p.pakistani;
   if(cat==='cafe')return p.kind==='cafe';
   if(cat==='do')return p.kind==='hist'||p.kind==='view'||p.kind==='park';
   if(cat==='free')return p.kind==='park'||p.kind==='view';
@@ -149,7 +151,7 @@ function localSearch(miles){
   var out=[];
   PLACES.forEach(function(p){
     var d=dist(pos.lat,pos.lon,p.la,p.lo)/MI;
-    if(d<=miles)out.push({name:p.n,kind:p.k,lat:p.la,lon:p.lo,halal:!!p.h,chain:false,cuisine:p.c||'',note:p.t||'',price:p.p||'',rating:p.r||0,reviews:p.v||0,area:p.a||'',hours:''});
+    if(d<=miles)out.push({name:p.n,kind:p.k,lat:p.la,lon:p.lo,halal:!!p.h,pakistani:/pakistani/i.test(p.c||''),chain:false,cuisine:p.c||'',note:p.t||'',price:p.p||'',rating:p.r||0,reviews:p.v||0,area:p.a||'',hours:''});
   });
   return out;
 }
@@ -201,14 +203,14 @@ function render(){
     var empty=el('div','place');
     empty.appendChild(el('h3','','Nothing on the list within '+$('radius').value+' miles.'));
     var c=closestInCat();
-    if(c)empty.appendChild(el('div','meta','Closest '+({all:'place',food:'restaurant',halal:'Halal or Desi spot',cafe:'coffee spot','do':'thing to do',free:'free spot'})[cat]+': '+c.name+' — '+(c.d/MI).toFixed(1)+' mi away.'));
+    if(c)empty.appendChild(el('div','meta','Closest '+({all:'place',food:'restaurant',halal:'Halal or Desi spot',pakistani:'Pakistani spot',cafe:'coffee spot','do':'thing to do',free:'free spot'})[cat]+': '+c.name+' — '+(c.d/MI).toFixed(1)+' mi away.'));
     var wb=el('button','btn','Show places within 20 miles');wb.type='button';wb.style.marginTop='10px';
     wb.onclick=function(){$('radius').value='20';search(true)};
     empty.appendChild(wb);
     list.appendChild(empty);
   }
   var more=el('div','place');
-  var mq={all:'places to visit near me',food:'restaurants near me',halal:'halal restaurants near me',cafe:'coffee shops near me','do':'things to do near me',free:'parks near me'}[cat]||'places to visit near me';
+  var mq={all:'places to visit near me',food:'restaurants near me',halal:'halal restaurants near me',pakistani:'pakistani restaurants near me',cafe:'coffee shops near me','do':'things to do near me',free:'parks near me'}[cat]||'places to visit near me';
   var ma=el('div','acts');ma.appendChild(link('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mq),'More on Google Maps'));
   more.appendChild(el('div','meta','Not on the list? Search Google Maps for more near you.'));more.appendChild(ma);list.appendChild(more);
 }

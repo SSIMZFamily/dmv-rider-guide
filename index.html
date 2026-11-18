@@ -76,6 +76,7 @@ label.check input{width:22px;height:22px;margin:2px 0 0;flex:none}
 var CATS=[
  {id:'all',label:'All'},
  {id:'food',label:'Food'},
+ {id:'pakistani',label:'Pakistani'},
  {id:'cafe',label:'Coffee and bakery'},
  {id:'view',label:'Views'},
  {id:'park',label:'Parks'},
@@ -115,7 +116,7 @@ function localSearch(miles){
   var out=[];
   PLACES.forEach(function(p){
     var d=dist(pos.lat,pos.lon,p.la,p.lo)/MI;
-    if(d<=miles)out.push({name:p.n,kind:p.k,lat:p.la,lon:p.lo,halal:!!p.h,chain:false,cuisine:p.c||'',note:p.t||'',price:p.p||'',rating:p.r||0,reviews:p.v||0,area:p.a||'',hours:''});
+    if(d<=miles)out.push({name:p.n,kind:p.k,lat:p.la,lon:p.lo,halal:!!p.h,pakistani:/pakistani/i.test(p.c||''),chain:false,cuisine:p.c||'',note:p.t||'',price:p.p||'',rating:p.r||0,reviews:p.v||0,area:p.a||'',hours:''});
   });
   return out;
 }
@@ -135,7 +136,7 @@ function search(force){
 function closestInCat(){
   var best=null,bd=Infinity;
   PLACES.forEach(function(p){
-    if(!(cat==='all'||p.k===cat))return;
+    if(!(cat==='pakistani'?/pakistani/i.test(p.c||''):(cat==='all'||p.k===cat)))return;
     var d=dist(pos.lat,pos.lon,p.la,p.lo);
     if(d<bd){bd=d;best={name:p.n,d:d}}
   });
@@ -145,7 +146,7 @@ function render(){
   var list=$('list');list.textContent='';
   if(!pos)return;
   var hide=$('nochains').checked;
-  var rows=items.filter(function(p){return (cat==='all'||p.kind===cat)&&!(hide&&p.chain)});
+  var rows=items.filter(function(p){return (cat==='pakistani'?p.pakistani:(cat==='all'||p.kind===cat))&&!(hide&&p.chain)});
   rows.forEach(function(p){p.d=dist(pos.lat,pos.lon,p.lat,p.lon)});
   rows.sort(function(a,b){return a.d-b.d});
   rows=rows.slice(0,25);
@@ -182,12 +183,12 @@ function render(){
     var empty=document.createElement('div');empty.className='place';
     var eh=document.createElement('h3');eh.textContent='Nothing on the list within '+$('radius').value+' miles.';empty.appendChild(eh);
     var c=closestInCat();
-    if(c){var em=document.createElement('div');em.className='meta';em.textContent='Closest '+({all:'place',food:'restaurant',cafe:'coffee spot',view:'view',park:'park',hist:'landmark'})[cat]+': '+c.name+' — '+(c.d/MI).toFixed(1)+' mi away.';empty.appendChild(em)}
+    if(c){var em=document.createElement('div');em.className='meta';em.textContent='Closest '+({all:'place',food:'restaurant',pakistani:'Pakistani spot',cafe:'coffee spot',view:'view',park:'park',hist:'landmark'})[cat]+': '+c.name+' — '+(c.d/MI).toFixed(1)+' mi away.';empty.appendChild(em)}
     var wb=document.createElement('button');wb.className='btn';wb.type='button';wb.textContent='Show places within 20 miles';wb.style.marginTop='10px';
     wb.onclick=function(){$('radius').value='20';search(true)};
     empty.appendChild(wb);list.appendChild(empty);
   }
-  var mq={all:'places to visit near me',food:'restaurants near me',cafe:'coffee shops near me',view:'scenic viewpoints near me',park:'parks near me',hist:'landmarks near me'}[cat]||'places to visit near me';
+  var mq={all:'places to visit near me',food:'restaurants near me',pakistani:'pakistani restaurants near me',cafe:'coffee shops near me',view:'scenic viewpoints near me',park:'parks near me',hist:'landmarks near me'}[cat]||'places to visit near me';
   var more=document.createElement('div');more.className='place';
   var mm=document.createElement('div');mm.className='meta';mm.textContent='Not on the list? Search Google Maps for more near you.';
   var ma=document.createElement('a');ma.className='btn alt';ma.target='_blank';ma.rel='noopener';ma.textContent='More on Google Maps';
