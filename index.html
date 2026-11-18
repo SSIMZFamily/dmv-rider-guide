@@ -1,217 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Film Spot Finder — DMVJourneyGuru (private)</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>DMVJourneyGuru Film Spot Finder</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #101820; color: #eef2f5; line-height: 1.5; padding: 16px; max-width: 680px; margin: 0 auto; }
-  header { text-align: center; padding: 16px 0 6px; }
-  h1 { font-size: 24px; }
-  .sub { color: #9fb3c0; font-size: 14px; }
-  .warn { background: #5a2b00; border: 1px solid #a35400; color: #ffd9a8; border-radius: 8px; padding: 10px 14px; margin: 14px 0; text-align: center; font-size: 14px; font-weight: 600; }
-  button { display: block; width: 100%; padding: 13px; margin: 8px 0; font-size: 16px; font-weight: 700; border: none; border-radius: 10px; background: #f5b301; color: #14261a; cursor: pointer; }
-  button.secondary { background: #22303c; color: #eef2f5; border: 1px solid #3d5568; }
-  button.small { width: auto; display: inline-block; padding: 8px 14px; font-size: 14px; margin: 4px 6px 0 0; }
-  .cats { display: none; }
-  .cats.show { display: block; }
-  .cat-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-  .cat-row button { width: auto; flex: 1 1 45%; padding: 11px 6px; font-size: 14px; margin: 0; }
-  .cat-row button.active { background: #f5b301; color: #14261a; }
-  .card { background: #1a2833; border: 1px solid #2c4252; border-radius: 10px; padding: 14px; margin: 10px 0; }
-  .card h3 { font-size: 18px; }
-  .card .meta { color: #9fb3c0; font-size: 13px; margin: 2px 0 6px; }
-  .card .hook { background: #0f2a1e; border-left: 3px solid #1d7a3d; padding: 8px 10px; margin: 8px 0; font-size: 14px; color: #cfe8d4; }
-  .card .links a { display: inline-block; margin: 4px 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #2c4252; color: #fff; text-decoration: none; font-size: 14px; font-weight: 600; }
-  .card .links a.gold { background: #f5b301; color: #14261a; }
-  .note { font-size: 13px; color: #9fb3c0; margin: 10px 0; }
-  .section { margin: 22px 0; }
-  .section h2 { font-size: 19px; border-bottom: 2px solid #1d7a3d; padding-bottom: 6px; margin-bottom: 10px; }
-  .status { text-align: center; color: #9fb3c0; font-size: 14px; margin: 8px 0; min-height: 20px; }
-  .saved-empty { color: #9fb3c0; font-size: 14px; }
-  footer { text-align: center; color: #6b8291; font-size: 12px; margin: 28px 0 10px; }
-  .hidden { display: none !important; }
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--mute:#6b6a64;--line:#dedcd3;--accent:#0b6e4f;--accent-ink:#fff;--warn:#fff3cd;--warn-ink:#5c4400}
+@media (prefers-color-scheme:dark){:root{--bg:#161614;--card:#222220;--ink:#f1efe8;--mute:#a8a69c;--line:#3a3935;--accent:#3fb68b;--accent-ink:#0c1a14;--warn:#3a3000;--warn-ink:#ffe9a3}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:680px;margin:0 auto;padding:16px 16px 48px}
+h1{font-size:22px;margin:4px 0 2px}
+h2{font-size:17px;margin:0 0 10px}
+.sub{color:var(--mute);margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 14px}
+.warn{background:var(--warn);color:var(--warn-ink);border-radius:10px;padding:10px 12px;margin:0 0 12px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:9px 14px;font-size:15px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
+.bar select,.bar label{font-size:15px}
+select,input[type=text]{padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px}
+a.btn,button.btn{display:inline-block;text-align:center;text-decoration:none;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:11px 14px;font-size:15px;font-weight:600;cursor:pointer}
+.alt{background:transparent!important;color:var(--ink)!important;border:1px solid var(--line)!important}
+.status{color:var(--mute);font-size:14px;margin:0 0 10px;min-height:20px}
+.place{padding:12px 0;border-bottom:1px solid var(--line)}
+.place:last-child{border-bottom:0}
+.place h3{font-size:17px;margin:0}
+.meta{color:var(--mute);font-size:14px;margin:2px 0 8px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.hook{font-weight:700;font-size:18px;margin:8px 0 0}
+.note{color:var(--mute);font-size:14px}
+.spot{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.spot small{color:var(--mute);display:block}
+.spot button{border:0;background:transparent;color:var(--mute);font-size:22px;cursor:pointer}
+label.check{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}
+label.check:last-child{border-bottom:0}
+label.check input{width:22px;height:22px;margin:2px 0 0;flex:none}
 </style>
 </head>
 <body>
+<main>
+<h1>Film Spot Finder</h1>
+<p class="sub">DMVJourneyGuru &middot; places near you that are worth a short video.</p>
+<div class="warn">Look at this only when parked. Never handle your phone while driving.</div>
 
-<header>
-  <h1>Film Spot Finder</h1>
-  <p class="sub">Private tool for DMVJourneyGuru — find places to film near where you are parked.</p>
-</header>
-
-<div class="warn">Use only when parked. Never while driving. No riders in any frame, no audio of anyone&rsquo;s conversation.</div>
-
-<button id="findBtn" onclick="findSpots()">Find spots near me</button>
-<div class="status" id="status"></div>
-
-<div class="cats" id="cats">
-  <div class="cat-row">
-    <button data-cat="restaurants" onclick="pickCat('restaurants', this)">Restaurants</button>
-    <button data-cat="coffee" onclick="pickCat('coffee', this)">Coffee &amp; bakeries</button>
-    <button data-cat="views" onclick="pickCat('views', this)">Views</button>
-    <button data-cat="parks" onclick="pickCat('parks', this)">Parks</button>
-    <button data-cat="landmarks" onclick="pickCat('landmarks', this)">Landmarks</button>
-  </div>
-  <p class="note">Showing places within about 3 miles. Tap a category to switch. Ratings come from Google — OpenStreetMap has no star ratings.</p>
+<section class="card" aria-labelledby="near-h">
+<h2 id="near-h">Near you now</h2>
+<div class="chips" id="cats" role="group" aria-label="Category"></div>
+<div class="bar">
+  <label>Within <select id="radius"><option value="1">1 mile</option><option value="2" selected>2 miles</option><option value="5">5 miles</option><option value="10">10 miles</option><option value="20">20 miles</option></select></label>
+  <label><input type="checkbox" id="nochains" checked> Hide chains</label>
+  <button class="btn alt" id="refresh" type="button">Refresh</button>
 </div>
+<p class="status" id="status" aria-live="polite">Tap Refresh to find places near you.</p>
+<div id="list"></div>
+<p class="note">Places are hand-picked, highly rated local spots (4.5 stars or more with a few hundred reviews, checked Nov 18, 2026). Tap Check rating to see the latest Google reviews before you go. Opening hours change, so confirm before you stop.</p>
+</section>
 
-<div id="results"></div>
+<section class="card" aria-labelledby="chk-h">
+<h2 id="chk-h">Before you film</h2>
+<div id="checks"></div>
+</section>
 
-<div class="section">
-  <h2>Saved spots</h2>
-  <div id="savedList"><p class="saved-empty">Nothing saved yet. Tap &ldquo;Save&rdquo; on a spot to keep it here for later.</p></div>
-  <button class="secondary" onclick="clearSaved()">Clear saved list</button>
-</div>
-
-<p class="note">Location is used only to search for nearby places. It is not stored or sent anywhere except to the OpenStreetMap search. Ask a restaurant before filming inside — outside shots of the storefront and food are fine. Don&rsquo;t put any chain or licensed logo in a video heading.</p>
-
-<footer>DMVJourneyGuru &middot; private tool &middot; Made with OpenStreetMap data &copy; OpenStreetMap contributors</footer>
+<section class="card" aria-labelledby="saved-h">
+<h2 id="saved-h">Saved for later</h2>
+<div id="saved"></div>
+<p class="note">Saved spots stay in this browser on this phone only. Your location is used only to find places near you and is not stored or sent anywhere.</p>
+</section>
+</main>
 
 <script>
-let userLat = null, userLon = null, currentCat = "restaurants";
-let currentResults = {};
+(function(){
+var CATS=[
+ {id:'all',label:'All'},
+ {id:'food',label:'Food'},
+ {id:'cafe',label:'Coffee and bakery'},
+ {id:'view',label:'Views'},
+ {id:'park',label:'Parks'},
+ {id:'hist',label:'Landmarks'}
+];
+var HOOKS=['Is {p} worth the stop?','EXIT: {p}','Highly rated: {p}','{p} in 20 seconds','Local tip: {p}'];
+var CHECKS=[
+ 'Parked in a legal, safe spot',
+ 'Outside shots first: storefront, food, view',
+ 'Asked staff before filming inside',
+ 'No customer faces, no riders, no audio of conversations',
+ 'No brand logo as the main shot or heading art',
+ 'Say "highly rated", not "best", unless a source says so',
+ '3 clips: wide, close detail, one local tip for the voiceover'
+];
+var MI=1609.344;
+var cat='all',pos=null,items=[],lastQ=0,lastPos=null,busy=false,watchId=null;
+function $(i){return document.getElementById(i)}
+function store(k,v){try{if(v===undefined){return JSON.parse(localStorage.getItem(k)||'null')}localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+function dist(a,b,c,d){var R=6371000,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r;var h=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)*Math.sin(y/2);return 2*R*Math.asin(Math.sqrt(h))}
+function setStatus(t){$('status').textContent=t}
 
-const QUERIES = {
-  restaurants: 'nwr["amenity"="restaurant"](around:5000,{lat},{lon});',
-  coffee: 'nwr["amenity"="cafe"](around:5000,{lat},{lon});nwr["shop"="bakery"](around:5000,{lat},{lon});',
-  views: 'nwr["tourism"="viewpoint"](around:5000,{lat},{lon});nwr["tourism"="attraction"](around:5000,{lat},{lon});',
-  parks: 'nwr["leisure"="park"](around:5000,{lat},{lon});nwr["leisure"="garden"](around:5000,{lat},{lon});',
-  landmarks: 'nwr["tourism"~"museum|gallery|monument|memorial|castle"](around:5000,{lat},{lon});nwr["historic"~"monument|memorial|building"](around:5000,{lat},{lon});nwr["amenity"="place_of_worship"](around:5000,{lat},{lon});'
-};
-const CAT_LABEL = { restaurants: "Restaurants", coffee: "Coffee & bakeries", views: "Views", parks: "Parks", landmarks: "Landmarks" };
+/* Hand-picked local spots (checked Nov 18, 2026). No map server needed: the page measures distance to each place on the phone itself. To add a place, copy a line: {n:"Name",a:"Area",c:"Cuisine or note",t:"Short note",p:"$$",r:4.7,v:1200,la:38.9,lo:-77.0,k:"food",h:0}. k = food, cafe, view, park, hist. h = 1 for Halal or Desi. */
+var PLACES=[{"n": "Ada's on the River", "a": "Alexandria — Old Town Waterfront", "c": "American / Steakhouse / Seafood, wood-fired", "p": "$$$", "r": 4.6, "v": 2395, "la": 38.801404, "lo": -77.039578, "k": "food", "h": 0}, {"n": "BARCA Pier & Wine Bar", "a": "Alexandria — Old Town Waterfront", "c": "Spanish / Mediterranean tapas, wine bar", "p": "$$", "r": 4.8, "v": 2279, "la": 38.80124, "lo": -77.039866, "k": "food", "h": 0}, {"n": "Vermilion Restaurant & Bar", "a": "Alexandria — Old Town King St", "c": "Modern American, farm-to-table", "p": "$$$", "r": 4.7, "v": 4155, "la": 38.805665, "lo": -77.052266, "k": "food", "h": 0}, {"n": "Virtue Feed & Grain", "a": "Alexandria — Old Town Waterfront", "c": "Modern American gastropub / tavern", "p": "$$", "r": 4.7, "v": 4930, "la": 38.803834, "lo": -77.040121, "k": "food", "h": 0}, {"n": "Josephine", "a": "Alexandria — Old Town", "c": "French brasserie", "p": "$$$", "r": 4.8, "v": 1989, "la": 38.804438, "lo": -77.046054, "k": "food", "h": 0}, {"n": "The Majestic by Santiago Lopez", "a": "Alexandria — Old Town King St", "c": "New American / Mediterranean", "p": "$$", "r": 4.6, "v": 2825, "la": 38.805523, "lo": -77.049587, "k": "food", "h": 0}, {"n": "Caphe Banh Mi", "a": "Alexandria — Old Town", "c": "Vietnamese — pho, banh mi", "p": "$", "r": 4.6, "v": 1500, "la": 38.805918, "lo": -77.043755, "k": "food", "h": 0}, {"n": "Taverna Cretekou", "a": "Alexandria — Old Town King St", "c": "Greek / Mediterranean", "p": "$$$", "r": 4.5, "v": 1139, "la": 38.805243, "lo": -77.048842, "k": "food", "h": 0}, {"n": "Diya Indian Cuisine", "a": "Alexandria — Old Town", "c": "Indian / Nepalese, fine dining", "p": "$$", "r": 4.6, "v": 1330, "la": 38.806216, "lo": -77.041205, "k": "food", "h": 1}, {"n": "Andy's Pizza — Old Town", "a": "Alexandria — Old Town", "c": "Pizza — New York-style", "p": "$", "r": 4.8, "v": 2300, "la": 38.806054, "lo": -77.052271, "k": "food", "h": 0}, {"n": "Matt & Tony's All Day Kitchen + Bar", "a": "Alexandria — Del Ray", "c": "American, all-day brunch", "p": "$$", "r": 4.6, "v": 1857, "la": 38.819796, "lo": -77.05732, "k": "food", "h": 0}, {"n": "Del Ray Café", "a": "Alexandria — Del Ray", "c": "French-American, farm-to-table café", "p": "$$", "r": 4.6, "v": 1813, "la": 38.823857, "lo": -77.057665, "k": "cafe", "h": 0}, {"n": "Cheesetique — Del Ray", "a": "Alexandria — Del Ray", "c": "Cheese shop / wine bar / bistro", "p": "$$", "r": 4.7, "v": 436, "la": 38.827321, "lo": -77.058755, "k": "food", "h": 0}, {"n": "Los Tios Grill", "a": "Alexandria — Del Ray", "c": "Tex-Mex / Salvadoran", "p": "$$", "r": 4.5, "v": 400, "la": 38.829097, "lo": -77.059036, "k": "food", "h": 0}, {"n": "Royal Nepal Restaurant", "a": "Alexandria — Del Ray / Arlandria edge", "c": "Nepalese / Indian", "p": "$$", "r": 4.7, "v": 570, "la": 38.839591, "lo": -77.062461, "k": "food", "h": 1}, {"n": "Old Ebbitt Grill", "a": "DC — Downtown / White House", "c": "American / Seafood, oyster bar", "p": "$$$", "r": 4.6, "v": 7779, "la": 38.897942, "lo": -77.033375, "k": "food", "h": 0}, {"n": "Albi", "a": "DC — Navy Yard", "c": "Palestinian / Middle Eastern, wood-fired", "p": "$$$$", "r": 4.6, "v": 2641, "la": 38.874071, "lo": -77.000266, "k": "food", "h": 0}, {"n": "Dōgon by Kwame Onwuachi", "a": "DC — Southwest Waterfront", "c": "Afro-Caribbean", "p": "$$$$", "r": 4.5, "v": 372, "la": 38.883587, "lo": -77.030176, "k": "food", "h": 0}, {"n": "Causa", "a": "DC — Shaw / Blagden Alley", "c": "Peruvian, tasting menu", "p": "$$$$", "r": 4.5, "v": 384, "la": 38.906912, "lo": -77.024791, "k": "food", "h": 0}, {"n": "1789 Restaurant", "a": "DC — Georgetown", "c": "American fine dining", "p": "$$$$", "r": 4.7, "v": 456, "la": 38.906016, "lo": -77.07036, "k": "food", "h": 0}, {"n": "ANJU", "a": "DC — Dupont Circle", "c": "Korean, modern / pub", "p": "$$", "r": 4.5, "v": 1184, "la": 38.91438, "lo": -77.041548, "k": "food", "h": 0}, {"n": "Moon Rabbit by Kevin Tien", "a": "DC — Penn Quarter / Chinatown", "c": "Vietnamese, modern tasting menu", "p": "$$$", "r": 4.8, "v": 1574, "la": 38.897532, "lo": -77.025247, "k": "food", "h": 0}, {"n": "Oyster Oyster", "a": "DC — Shaw", "c": "Vegetarian / plant-forward tasting menu", "p": "$$$$", "r": null, "v": null, "la": 38.909231, "lo": -77.023059, "k": "food", "h": 0}, {"n": "Elmina", "a": "DC — U Street Corridor / 14th St", "c": "Ghanaian, modern", "p": "$$$", "r": 4.6, "v": 415, "la": 38.919552, "lo": -77.032328, "k": "food", "h": 0}, {"n": "Lutèce", "a": "DC — Georgetown", "c": "French neo-bistro", "p": "$$", "r": null, "v": null, "la": 38.909427, "lo": -77.064537, "k": "food", "h": 0}, {"n": "Jimmy's Famous Seafood", "a": "Baltimore — Dundalk / East Baltimore", "c": "Seafood / Maryland crab", "p": "$$$", "r": 4.6, "v": 3466, "la": 39.272518, "lo": -76.534801, "k": "food", "h": 0}, {"n": "Koco's Pub", "a": "Baltimore — Lauraville", "c": "Seafood pub / American", "p": "$$", "r": 4.7, "v": 3173, "la": 39.338592, "lo": -76.573356, "k": "food", "h": 0}, {"n": "Thames Street Oyster House", "a": "Baltimore — Fells Point", "c": "Seafood / oyster bar", "p": "$$", "r": 4.7, "v": 1075, "la": 39.282008, "lo": -76.591595, "k": "food", "h": 0}, {"n": "Ekiben", "a": "Baltimore — Fells Point", "c": "Asian-fusion / bao", "p": "$$", "r": 4.8, "v": 2819, "la": 39.285604, "lo": -76.594522, "k": "food", "h": 0}, {"n": "Chaps Pit Beef", "a": "Baltimore — East Baltimore", "c": "Pit beef / BBQ", "p": "$$", "r": 4.7, "v": 2738, "la": 39.301481, "lo": -76.547856, "k": "food", "h": 0}, {"n": "Ampersea", "a": "Baltimore — Harbor Point / Fells Point", "c": "Modern American / seafood", "p": "$$", "r": 4.7, "v": 3046, "la": 39.279632, "lo": -76.596221, "k": "food", "h": 0}, {"n": "The Food Market", "a": "Baltimore — Hampden", "c": "New American / comfort food", "p": "$$$", "r": 4.7, "v": 5102, "la": 39.330878, "lo": -76.633254, "k": "food", "h": 0}, {"n": "Miss Shirley's Cafe — Inner Harbor", "a": "Baltimore — Inner Harbor", "c": "Southern brunch / American", "p": "$$", "r": 4.7, "v": 741, "la": 39.286945, "lo": -76.605308, "k": "food", "h": 0}, {"n": "Azumi", "a": "Baltimore — Harbor East", "c": "Japanese / sushi", "p": "$$$", "r": 4.8, "v": 2405, "la": 39.282673, "lo": -76.602572, "k": "food", "h": 0}, {"n": "The Prime Rib — Baltimore (Original)", "a": "Baltimore — Mount Vernon", "c": "Steakhouse / seafood", "p": "$$$$", "r": 4.6, "v": 4423, "la": 39.302588, "lo": -76.612823, "k": "food", "h": 0}, {"n": "Sabatino's Italian Restaurant", "a": "Baltimore — Little Italy", "c": "Italian", "p": "$$", "r": 4.6, "v": 2442, "la": 39.286263, "lo": -76.601624, "k": "food", "h": 0}, {"n": "Boatyard Bar & Grill", "a": "Annapolis — Eastport", "c": "Seafood / American bar & grill", "p": "$$", "r": 4.7, "v": 6814, "la": 38.971216, "lo": -76.482469, "k": "food", "h": 0}, {"n": "Vin 909 Winecafe", "a": "Annapolis — Eastport", "c": "Wine bar / wood-fired pizza, New American", "p": "$$", "r": 4.8, "v": 1120, "la": 38.966777, "lo": -76.488564, "k": "food", "h": 0}, {"n": "Carrol's Creek Cafe", "a": "Annapolis — Eastport / Spa Creek", "c": "Seafood, Chesapeake", "p": "$$$", "r": 4.6, "v": 2735, "la": 38.971519, "lo": -76.483602, "k": "food", "h": 0}, {"n": "Cantler's Riverside Inn", "a": "Annapolis — Annapolis Neck / Mill Creek", "c": "Crab house / seafood", "p": "$$", "r": 4.6, "v": 1324, "la": 39.003213, "lo": -76.458104, "k": "food", "h": 0}, {"n": "Galway Bay Irish Restaurant and Pub", "a": "Annapolis — Downtown", "c": "Irish pub", "p": "$$", "r": 4.7, "v": 2050, "la": 38.97975, "lo": -76.48978, "k": "food", "h": 0}, {"n": "Osteria 177", "a": "Annapolis — Downtown Main St", "c": "Italian coastal", "p": "$$$", "r": 4.7, "v": 818, "la": 38.977706, "lo": -76.490212, "k": "food", "h": 0}, {"n": "Iron Rooster", "a": "Annapolis — City Dock / Market Space", "c": "All-day breakfast / American comfort", "p": "$$", "r": null, "v": null, "la": 38.978304, "lo": -76.487205, "k": "food", "h": 0}, {"n": "Chick & Ruth's Delly", "a": "Annapolis — Downtown Main St", "c": "Diner / deli, American", "p": "$$", "r": 4.6, "v": 1780, "la": 38.977733, "lo": -76.489962, "k": "food", "h": 0}, {"n": "Miss Shirley's Cafe", "a": "Annapolis — Downtown West St", "c": "Southern-inspired breakfast/brunch", "p": "$$", "r": 4.8, "v": 496, "la": 38.976556, "lo": -76.502906, "k": "food", "h": 0}, {"n": "Blackwall Hitch", "a": "Annapolis — Eastport", "c": "Seafood / American, rooftop bar", "p": "$$", "r": 4.5, "v": 3052, "la": 38.970259, "lo": -76.484728, "k": "food", "h": 0}, {"n": "Preserve", "a": "Annapolis — Downtown Main St", "c": "New American, pickling/fermentation", "p": "$$", "r": 4.5, "v": 847, "la": 38.977845, "lo": -76.489825, "k": "food", "h": 0}, {"n": "Seasalt Annapolis", "a": "Annapolis — Downtown West St", "c": "Seafood / raw bar, cocktails", "p": "$$", "r": 4.6, "v": 332, "la": 38.976736, "lo": -76.503192, "k": "food", "h": 0}, {"n": "Acqua Al 2", "a": "Annapolis — Downtown Main St", "c": "Tuscan Italian", "p": "$$$", "r": 4.6, "v": 369, "la": 38.978386, "lo": -76.492164, "k": "food", "h": 0}, {"n": "The Choptank ⚠️ BORDERLINE", "a": "Annapolis — City Dock / Ego Alley", "c": "Seafood / crab house", "p": "$$$", "r": 4.5, "v": 2194, "la": 38.977006, "lo": -76.486459, "k": "food", "h": 0}, {"n": "The Liberty Tavern", "a": "Arlington — Clarendon", "c": "New American / American-Italian", "p": "$$", "r": 4.7, "v": 4018, "la": 38.886377, "lo": -77.096874, "k": "food", "h": 0}, {"n": "Carbonara", "a": "Arlington — Ballston / Virginia Square", "c": "Italian (old-school New York)", "p": "$$", "r": 4.8, "v": 6357, "la": 38.880276, "lo": -77.106337, "k": "food", "h": 0}, {"n": "Yume Sushi", "a": "Arlington — East Falls Church / Westmoreland", "c": "Japanese / sushi, omakase", "p": "$$", "r": null, "v": null, "la": 38.886346, "lo": -77.162171, "k": "food", "h": 0}, {"n": "Ruthie's All-Day", "a": "Arlington — Columbia Pike / Glebe Rd", "c": "Southern / barbecue, all-day brunch", "p": "$$", "r": 4.8, "v": 3975, "la": 38.8673, "lo": -77.09527, "k": "food", "h": 0}, {"n": "MeJana", "a": "Arlington — Courthouse", "c": "Lebanese / Mediterranean mezze", "p": "$$", "r": 4.8, "v": 1827, "la": 38.89054, "lo": -77.0871, "k": "food", "h": 0}, {"n": "Ambar — Clarendon", "a": "Arlington — Clarendon", "c": "Balkan small plates / tapas", "p": "$$ ($31–$50 per OpenTable)", "r": 4.5, "v": 4427, "la": 38.888725, "lo": -77.093468, "k": "food", "h": 0}, {"n": "Palette 22", "a": "Arlington — Shirlington", "c": "Global small plates / tapas, art restaurant", "p": "$$", "r": 4.7, "v": 3450, "la": 38.841057, "lo": -77.08849, "k": "food", "h": 0}, {"n": "Carlyle", "a": "Arlington — Shirlington", "c": "New American bistro", "p": "$$", "r": null, "v": null, "la": 38.840513, "lo": -77.08703, "k": "food", "h": 0}, {"n": "Makers Union", "a": "Arlington — National Landing / Pentagon City", "c": "American gastropub", "p": "$$", "r": 4.7, "v": 2546, "la": 38.860593, "lo": -77.054073, "k": "food", "h": 0}, {"n": "Capital Doner", "a": "Arlington — Rosslyn / Courthouse", "c": "Turkish / doner, shawarma, gyro — 100% halal", "p": "$$", "r": null, "v": null, "la": 38.89417, "lo": -77.079165, "k": "food", "h": 1}, {"n": "Tacos El Chilango", "a": "Arlington — Courthouse / Rosslyn", "c": "Mexican street tacos (food truck)", "p": "$", "r": 4.8, "v": 975, "la": 38.890715, "lo": -77.077895, "k": "food", "h": 0}, {"n": "Fire Works Pizza", "a": "Arlington — Courthouse", "c": "Wood-fired pizza / American pizzeria & bar", "p": "$$", "r": 4.5, "v": 2346, "la": 38.889942, "lo": -77.087365, "k": "food", "h": 0}, {"n": "Salt", "a": "Arlington — Rosslyn", "c": "Speakeasy cocktail bar / American small plates", "p": "$$$", "r": 4.8, "v": 719, "la": 38.895726, "lo": -77.071002, "k": "food", "h": 0}, {"n": "1983 Chinese Cuisine", "a": "Arlington — Pentagon City / National Landing", "c": "Cantonese / dim sum", "p": "$$", "r": 4.5, "v": 525, "la": 38.863876, "lo": -77.062975, "k": "food", "h": 0}, {"n": "Dalia's Falafel", "a": "Bethesda — Downtown / Old Georgetown Rd", "c": "Middle Eastern / Mediterranean falafel", "p": "$", "r": 4.9, "v": 541, "la": 38.986961, "lo": -77.098265, "k": "food", "h": 0}, {"n": "Pisco y Nazca Bethesda", "a": "Bethesda — Downtown / Woodmont Ave", "c": "Peruvian ceviche gastrobar", "p": "$$", "r": 4.9, "v": 11168, "la": 38.9836, "lo": -77.095905, "k": "food", "h": 0}, {"n": "Takumi Japanese Bistro & Bar", "a": "Bethesda — Downtown / Bethesda Ave", "c": "Japanese / sushi", "p": "$$", "r": 4.9, "v": 361, "la": 38.981103, "lo": -77.099609, "k": "food", "h": 0}, {"n": "Peter's Carryout", "a": "Bethesda — Downtown / Wisconsin Ave", "c": "American diner / sandwiches", "p": "$", "r": 4.8, "v": 418, "la": 38.990961, "lo": -77.095403, "k": "food", "h": 0}, {"n": "Agora Bethesda", "a": "Bethesda — Downtown / Bethesda Metro Center", "c": "Mediterranean / Eastern Mediterranean", "p": "$$", "r": 4.8, "v": 322, "la": 38.984161, "lo": -77.094546, "k": "food", "h": 0}, {"n": "Olazzo", "a": "Bethesda — Downtown / Norfolk Ave", "c": "Italian", "p": "$$", "r": 4.5, "v": 1001, "la": 38.989318, "lo": -77.097724, "k": "food", "h": 0}, {"n": "Firepan Korean BBQ and Bar", "a": "Silver Spring — Downtown / Wayne Ave", "c": "Korean BBQ, all-you-can-eat", "p": "$$", "r": null, "v": null, "la": 38.994245, "lo": -77.026105, "k": "food", "h": 0}, {"n": "Chido's Tex-Mex Grill Silver Spring", "a": "Silver Spring — Downtown / Ellsworth Dr", "c": "Tex-Mex / Mexican", "p": "$$", "r": null, "v": null, "la": 38.9959, "lo": -77.026904, "k": "food", "h": 0}, {"n": "Sebseb Ethiopian Restaurant and Bar", "a": "Silver Spring — Sligo Ave / Downtown", "c": "Ethiopian", "p": "$$", "r": 4.9, "v": 527, "la": 38.991341, "lo": -77.013956, "k": "food", "h": 0}, {"n": "Effoi Restaurant", "a": "Silver Spring — Downtown / Fenton St", "c": "Ethiopian", "p": "$$", "r": 4.8, "v": 651, "la": 38.992671, "lo": -77.023846, "k": "food", "h": 0}, {"n": "Mandalay Restaurant & Cafe", "a": "Silver Spring — Downtown / Bonifant St", "c": "Burmese", "p": "$$", "r": 4.7, "v": 973, "la": 38.993789, "lo": -77.025109, "k": "food", "h": 0}, {"n": "Quarry House Tavern", "a": "Silver Spring — Downtown / Georgia Ave", "c": "American / dive bar, burgers", "p": "$$", "r": 4.6, "v": 1368, "la": 38.993605, "lo": -77.026517, "k": "food", "h": 0}, {"n": "Zinnia", "a": "Silver Spring — Colesville Rd / Mrs. K's Tollhouse", "c": "New American", "p": "$$", "r": 4.5, "v": 969, "la": 39.005392, "lo": -77.022402, "k": "food", "h": 0}, {"n": "Fairfax Kabob", "a": "Fairfax — Old Town Fairfax", "c": "Afghan / Middle Eastern (halal), locally owned", "p": "$$", "r": 4.7, "v": 1046, "la": 38.845755, "lo": -77.300676, "k": "food", "h": 1}, {"n": "High Side", "a": "Fairfax — Old Town Fairfax", "c": "Taiwanese / Asian street food + craft beer", "p": "$$", "r": 4.6, "v": 588, "la": 38.845887, "lo": -77.306532, "k": "food", "h": 0}, {"n": "The Auld Shebeen", "a": "Fairfax — Old Town Fairfax", "c": "Irish pub", "p": "$$", "r": 4.6, "v": 1900, "la": 38.846959, "lo": -77.306265, "k": "food", "h": 0}, {"n": "Chef Yan", "a": "Fairfax — Fair City Mall", "c": "Sichuan Chinese", "p": "$$", "r": 4.5, "v": 463, "la": 38.842644, "lo": -77.274337, "k": "food", "h": 0}, {"n": "Genki Izakaya", "a": "Fairfax — Scout on the Circle", "c": "Japanese izakaya / sushi", "p": "$$$", "r": 4.7, "v": 1800, "la": 38.8653, "lo": -77.27338, "k": "food", "h": 0}, {"n": "Taste of Silk Road — Uzbek & Uyghur & Turkish Cuisine", "a": "Fairfax — Main St", "c": "Uzbek / Uyghur / Turkish, fully halal, nonprofit eatery", "p": "$$", "r": 4.6, "v": 1000, "la": 38.843905, "lo": -77.291433, "k": "food", "h": 1}, {"n": "Ocean Paradise Restaurant & Bar", "a": "Fairfax — Fair Ridge Dr", "c": "Seafood / American, family-owned (founded by three sisters)", "p": "$$", "r": 4.6, "v": 602, "la": 38.873236, "lo": -77.372905, "k": "food", "h": 0}, {"n": "Agora Tysons Mediterranean Restaurant", "a": "Tysons — Westpark Dr", "c": "Mediterranean / Turkish / Greek / Lebanese", "p": "$$", "r": 4.7, "v": 2800, "la": 38.924595, "lo": -77.218759, "k": "food", "h": 0}, {"n": "Joon", "a": "Tysons — Tysons Corner Center area", "c": "Persian / Middle Eastern", "p": "$$$$", "r": 4.5, "v": 2200, "la": 38.912988, "lo": -77.224231, "k": "food", "h": 0}, {"n": "Circa at The Boro", "a": "Tysons — The Boro", "c": "American bistro", "p": "$$", "r": null, "v": null, "la": 38.923342, "lo": -77.233008, "k": "food", "h": 0}, {"n": "Rango's Tex-Mex & Grill", "a": "Tysons — Old Gallows Rd", "c": "Tex-Mex / Mexican, family-owned (Rosa family, 30+ years)", "p": "$$", "r": 4.6, "v": 1555, "la": 38.91194, "lo": -77.222595, "k": "food", "h": 0}, {"n": "RollPlay: Viet Food that Loves You Too!", "a": "Tysons — Leesburg Pike", "c": "Vietnamese fast-casual", "p": "$$", "r": 4.5, "v": 2279, "la": 38.916444, "lo": -77.227192, "k": "food", "h": 0}, {"n": "Super Chicken", "a": "Tysons — Leesburg Pike", "c": "Peruvian chicken (pollo a la brasa)", "p": "$$", "r": 4.5, "v": 1751, "la": 38.920571, "lo": -77.235138, "k": "food", "h": 0}, {"n": "Patsy's American", "a": "Tysons — Leesburg Pike", "c": "American / seafood / raw bar", "p": "$$", "r": 4.5, "v": 3000, "la": 38.912027, "lo": -77.224098, "k": "food", "h": 0}, {"n": "Ingle Korean Steakhouse", "a": "Tysons — Leesburg Pike", "c": "Korean steakhouse, table-side grilling, prix fixe", "p": "$$$$", "r": 4.9, "v": 1600, "la": 38.921415, "lo": -77.23607, "k": "food", "h": 0}, {"n": "Kuya Ja's Lechon Belly", "a": "Rockville (Nicholson Ln) — listed as Kensington in Places data, on the Rockville/Kensington border", "c": "Filipino", "p": "$$", "r": 4.6, "v": 857, "la": 39.044311, "lo": -77.106906, "k": "food", "h": 0}, {"n": "Il Pizzico", "a": "Rockville", "c": "Italian / seafood", "p": "$$$", "r": 4.6, "v": 1119, "la": 39.10575, "lo": -77.157235, "k": "food", "h": 0}, {"n": "Royal Tandoor Indian Restaurant", "a": "Gaithersburg", "c": "North Indian / Himalayan", "p": "$$", "r": 4.8, "v": 4045, "la": 39.114044, "lo": -77.217285, "k": "food", "h": 1}, {"n": "Coastal Flats", "a": "Gaithersburg (Kentlands/Crown)", "c": "Seafood / coastal American", "p": "$$", "r": null, "v": null, "la": 39.11444, "lo": -77.20596, "k": "food", "h": 0}, {"n": "Isabella's Taverna & Tapas Bar", "a": "Frederick — downtown", "c": "Spanish / Mediterranean tapas", "p": "$$", "r": 4.5, "v": 717, "la": 39.415033, "lo": -77.41078, "k": "food", "h": 0}, {"n": "Sabor De Cuba", "a": "Frederick — downtown", "c": "Cuban / Caribbean", "p": "$$", "r": 4.8, "v": 343, "la": 39.414222, "lo": -77.41047, "k": "food", "h": 0}, {"n": "White Rabbit Gastropub", "a": "Frederick — downtown", "c": "Gastropub / Detroit-style pizza", "p": "$$", "r": 4.8, "v": 303, "la": 39.415875, "lo": -77.409654, "k": "food", "h": 0}, {"n": "The Tasting Room", "a": "Frederick — downtown", "c": "New American / wine bar", "p": "$$$", "r": 4.6, "v": 1696, "la": 39.415483, "lo": -77.410961, "k": "food", "h": 0}, {"n": "Royal Taj Restaurant", "a": "Columbia", "c": "Indian fine dining", "p": "$$$", "r": 4.8, "v": 5843, "la": 39.186237, "lo": -76.801019, "k": "food", "h": 1}, {"n": "Sushi Sono", "a": "Columbia — Lake Kittamaqundi", "c": "Japanese / sushi", "p": "$$$", "r": null, "v": null, "la": 39.216111, "lo": -76.855386, "k": "food", "h": 0}, {"n": "Cazbar – Columbia", "a": "Columbia", "c": "Turkish / Mediterranean", "p": "$$", "r": 4.6, "v": 3491, "la": 39.177009, "lo": -76.836979, "k": "food", "h": 0}, {"n": "Pepper House", "a": "Ellicott City", "c": "Sichuan / noodles", "p": "$$", "r": 4.8, "v": 370, "la": 39.280373, "lo": -76.863522, "k": "food", "h": 0}, {"n": "Manor Hill Tavern", "a": "Ellicott City — Old Ellicott City", "c": "American / pub / brick-oven pizza", "p": "$$", "r": 4.6, "v": 2390, "la": 39.266982, "lo": -76.798167, "k": "food", "h": 0}, {"n": "SUCCOTASH National Harbor", "a": "National Harbor (Oxon Hill)", "c": "Southern / Southern-Korean fusion", "p": "$$", "r": 4.6, "v": 3811, "la": 38.783526, "lo": -77.017076, "k": "food", "h": 0}, {"n": "Gravelly Point Park", "a": "Arlington, VA", "c": "", "t": "Free park — planes land just overhead at DCA", "p": "", "r": null, "v": null, "la": 38.86503, "lo": -77.039538, "k": "park", "h": 0}, {"n": "Kenilworth Park & Aquatic Gardens", "a": "Washington, DC", "c": "", "t": "Free NPS gardens — lotus and lilies in summer", "p": "", "r": null, "v": null, "la": 38.91263, "lo": -76.94181, "k": "park", "h": 0}, {"n": "Theodore Roosevelt Island", "a": "Washington, DC", "c": "", "t": "Free island trails in the middle of the Potomac", "p": "", "r": null, "v": null, "la": 38.89562, "lo": -77.06655, "k": "park", "h": 0}, {"n": "Great Falls Park", "a": "Virginia", "c": "", "t": "Waterfalls and river views on the Potomac", "p": "", "r": null, "v": null, "la": 38.99448, "lo": -77.25547, "k": "park", "h": 0}, {"n": "National Mall", "a": "Washington, DC", "c": "", "t": "Free — monuments and museums, best at night", "p": "", "r": null, "v": null, "la": 38.89048, "lo": -77.0219, "k": "park", "h": 0}, {"n": "Annapolis City Dock & Ego Alley", "a": "Annapolis, MD", "c": "", "t": "Free to stroll — boats and harbour at the foot of Main Street", "p": "", "r": null, "v": null, "la": 38.97733, "lo": -76.48562, "k": "view", "h": 0}, {"n": "Solomons Island boardwalk", "a": "Solomons, MD", "c": "", "t": "Free waterfront walk on the Patuxent", "p": "", "r": null, "v": null, "la": 38.32103, "lo": -76.45869, "k": "view", "h": 0}, {"n": "Baltimore Inner Harbor", "a": "Baltimore, MD", "c": "", "t": "Free to walk the harbour promenade", "p": "", "r": null, "v": null, "la": 39.28255, "lo": -76.61222, "k": "view", "h": 0}, {"n": "Old Town Alexandria Waterfront Park", "a": "Alexandria, VA", "c": "", "t": "Free riverfront park at the foot of King Street", "p": "", "r": null, "v": null, "la": 38.80321, "lo": -77.04018, "k": "view", "h": 0}, {"n": "St. Michaels waterfront", "a": "St. Michaels, MD", "c": "", "t": "Free harbour views in a small Chesapeake town", "p": "", "r": null, "v": null, "la": 38.79663, "lo": -76.2264, "k": "view", "h": 0}, {"n": "National Air and Space Museum", "a": "Washington, DC", "c": "", "t": "Free Smithsonian museum", "p": "", "r": null, "v": null, "la": 38.88812, "lo": -77.0198, "k": "hist", "h": 0}, {"n": "National Museum of American History", "a": "Washington, DC", "c": "", "t": "Free Smithsonian museum", "p": "", "r": null, "v": null, "la": 38.89121, "lo": -77.03007, "k": "hist", "h": 0}];
 
-const HOOKS = {
-  restaurants: ["The {n} plate you have to see in {a}", "Lunch break: {n} — worth the stop?", "EXIT — {n}, {a}"],
-  coffee: ["The {n} coffee stop your morning needs", "Sweet stop: {n} in {a}", "EXIT — {n}, {a}"],
-  views: ["The {a} view that stops traffic", "Golden hour at {n}", "EXIT — {n}, {a}"],
-  parks: ["The quietest green in {a}: {n}", "Free in the DMV: {n}", "EXIT — {n}, {a}"],
-  landmarks: ["The {a} landmark most drivers pass: {n}", "{n} — the story behind it", "EXIT — {n}, {a}"]
-};
-
-function setStatus(t) { document.getElementById("status").textContent = t; }
-
-function findSpots() {
-  if (!navigator.geolocation) { setStatus("Location is not available on this device."); return; }
-  setStatus("Finding your location…");
-  navigator.geolocation.getCurrentPosition(function (pos) {
-    userLat = pos.coords.latitude; userLon = pos.coords.longitude;
-    document.getElementById("cats").classList.add("show");
-    setStatus("Got it — pick a category below.");
-    loadCat("restaurants");
-    document.querySelector('.cat-row button[data-cat="restaurants"]').classList.add("active");
-  }, function () {
-    setStatus("Location was not shared. Allow location for this page, then tap again.");
-  }, { timeout: 15000 });
+function kindOf(t){
+  if(t.amenity==='restaurant'||t.amenity==='fast_food'||t.amenity==='ice_cream')return 'food';
+  if(t.amenity==='cafe'||t.shop==='bakery'||t.shop==='pastry'||t.shop==='confectionery')return 'cafe';
+  if(t.tourism==='viewpoint'||t.natural==='beach')return 'view';
+  if(t.leisure==='park'||t.leisure==='nature_reserve')return 'park';
+  if(t.historic||t.tourism==='attraction'||t.tourism==='museum')return 'hist';
+  return null;
 }
+var KIND_LABEL={food:'Restaurant',cafe:'Coffee or bakery',view:'View',park:'Park',hist:'Landmark'};
 
-function pickCat(cat, btn) {
-  document.querySelectorAll(".cat-row button").forEach(function (b) { b.classList.remove("active"); });
-  btn.classList.add("active");
-  loadCat(cat);
-}
-
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const R = 6371, dLa = (lat2 - lat1) * Math.PI / 180, dLo = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLa / 2) * Math.sin(dLa / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLo / 2) * Math.sin(dLo / 2);
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-function loadCat(cat) {
-  currentCat = cat;
-  const box = document.getElementById("results");
-  box.innerHTML = "<p class='status'>Searching nearby " + CAT_LABEL[cat].toLowerCase() + "…</p>";
-  const q = "[out:json][timeout:25];(" + QUERIES[cat].split("{lat}").join(userLat).split("{lon}").join(userLon) + ");out center 40;";
-  fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST", body: "data=" + encodeURIComponent(q),
-    headers: { "Content-Type": "application/x-www-form-urlencoded" }
-  }).then(function (r) { return r.json(); }).then(function (data) {
-    const seen = {}, list = [];
-    (data.elements || []).forEach(function (el) {
-      const t = el.tags || {}; if (!t.name) return;
-      const key = t.name.toLowerCase(); if (seen[key]) return; seen[key] = 1;
-      const lat = el.lat || (el.center && el.center.lat), lon = el.lon || (el.center && el.center.lon);
-      if (!lat || !lon) return;
-      list.push({ name: t.name, cuisine: t.cuisine || "", addr: [t["addr:street"], t["addr:housenumber"]].filter(Boolean).join(" ") || "", lat: lat, lon: lon, dist: haversineKm(userLat, userLon, lat, lon) });
-    });
-    list.sort(function (a, b) { return a.dist - b.dist; });
-    renderResults(list.slice(0, 12));
-  }).catch(function () {
-    box.innerHTML = "<p class='status'>Could not reach the map search. Check your connection and try again.</p>";
+function localSearch(miles){
+  var out=[];
+  PLACES.forEach(function(p){
+    var d=dist(pos.lat,pos.lon,p.la,p.lo)/MI;
+    if(d<=miles)out.push({name:p.n,kind:p.k,lat:p.la,lon:p.lo,halal:!!p.h,chain:false,cuisine:p.c||'',note:p.t||'',price:p.p||'',rating:p.r||0,reviews:p.v||0,area:p.a||'',hours:''});
   });
+  return out;
 }
-
-function hookFor(p) {
-  const area = areaName();
-  const templates = HOOKS[currentCat] || HOOKS.restaurants;
-  const t = templates[Math.floor(Math.random() * templates.length)];
-  return t.split("{n}").join(p.name).split("{a}").join(area);
-}
-
-function areaName() {
-  // Rough label from coordinates — DC / Maryland / Virginia / Annapolis area.
-  if (userLat > 38.99 && userLat < 39.06 && userLon > -77.12 && userLon < -76.9) return "DC";
-  if (userLat > 38.9 && userLat < 39.05 && userLon > -77.2 && userLon < -76.9) return "the DMV";
-  if (userLat > 38.9 && userLat < 39.1 && userLon > -77.5 && userLon < -77.0) return "Northern Virginia";
-  if (userLat > 38.9 && userLat < 39.2 && userLon > -77.3 && userLon < -76.9) return "Maryland";
-  if (userLat > 38.9 && userLat < 39.05 && userLon > -76.6 && userLon < -76.4) return "Annapolis";
-  return "the DMV";
-}
-
-function renderResults(list) {
-  const box = document.getElementById("results");
-  currentResults = {};
-  if (!list.length) {
-    box.innerHTML = "<div class='card'><h3>No spots found nearby</h3><p class='meta'>Try another category, or move a little closer to town — this search covers about 3 miles.</p></div>";
-    return;
+function search(force){
+  if(!pos){setStatus('Waiting for your location...');return}
+  if(busy)return;
+  var now=Date.now();
+  if(!force&&lastPos&&dist(pos.lat,pos.lon,lastPos.lat,lastPos.lon)<800)return;
+  if(!force&&now-lastQ<60000)return;
+  busy=true;lastQ=now;lastPos={lat:pos.lat,lon:pos.lon};
+  var miles=+$('radius').value;
+  setStatus('Searching near you...');
+  items=localSearch(miles);
+  while(!items.length){
+    var RADII=[1,2,5,10,20],nr=null;
+    for(var i=0;i<RADII.length;i++){if(RADII[i]>miles){nr=RADII[i];break}}
+    if(!nr)break;
+    miles=nr;$('radius').value=String(nr);
+    setStatus('Nothing that close — looking up to '+nr+' miles out...');
+    items=localSearch(nr);
   }
-  let html = "<h2 class='section' style='font-size:19px;border-bottom:2px solid #1d7a3d;padding-bottom:6px;'>" + CAT_LABEL[currentCat] + " near you</h2>";
-  list.forEach(function (p, i) {
-    const id = "r" + i;
-    currentResults[id] = p;
-    const hook = hookFor(p);
-    const dir = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(p.name + ", " + p.lat + "," + p.lon);
-    const rate = "https://www.google.com/maps/search/" + encodeURIComponent(p.name + " reviews");
-    html += "<div class='card'><h3>" + esc(p.name) + "</h3>"
-      + "<p class='meta'>" + p.dist.toFixed(1) + " mi away" + (p.cuisine ? " &middot; " + esc(p.cuisine) : "") + (p.addr ? " &middot; " + esc(p.addr) : "") + "</p>"
-      + "<div class='hook'>Heading idea: &ldquo;" + esc(hook) + "&rdquo;</div>"
-      + "<div class='links'><a class='gold' href='" + dir + "' target='_blank' rel='noopener'>Directions</a>"
-      + "<a href='" + rate + "' target='_blank' rel='noopener'>Check rating</a></div>"
-      + "<div><button class='small' onclick=\"saveSpot('" + id + "')\">Save</button></div></div>";
+  busy=false;render();
+}
+
+function render(){
+  var list=$('list');list.textContent='';
+  if(!pos)return;
+  var hide=$('nochains').checked;
+  var rows=items.filter(function(p){return (cat==='all'||p.kind===cat)&&!(hide&&p.chain)});
+  rows.forEach(function(p){p.d=dist(pos.lat,pos.lon,p.lat,p.lon)});
+  rows.sort(function(a,b){return a.d-b.d});
+  rows=rows.slice(0,25);
+  setStatus(rows.length?rows.length+' places near you, closest first. Updated '+new Date(lastQ).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+'.':'Nothing found here. Try a larger radius, All, or turn off Hide chains.');
+  rows.forEach(function(p){
+    var d=document.createElement('div');d.className='place';
+    var h=document.createElement('h3');h.textContent=p.name;
+    var m=document.createElement('div');m.className='meta';
+    var bits=[(p.d/MI).toFixed(1)+' mi',KIND_LABEL[p.kind]];
+    if(p.cuisine)bits.push(p.cuisine);
+    if(p.price)bits.push(p.price);
+    if(p.rating)bits.push(p.rating+'\u2605 ('+p.reviews+' reviews)');
+    if(p.note)bits.push(p.note);
+    if(p.hours)bits.push('Hours: '+p.hours);
+    m.textContent=bits.join(' · ');
+    var a=document.createElement('div');a.className='acts';
+    var nav=document.createElement('a');nav.className='btn';nav.target='_blank';nav.rel='noopener';nav.textContent='Navigate';
+    nav.href='https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lon;
+    var rate=document.createElement('a');rate.className='btn alt';rate.target='_blank';rate.rel='noopener';rate.textContent='Check rating';
+    rate.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.name+' '+p.lat+','+p.lon);
+    var hk=document.createElement('button');hk.className='btn alt';hk.type='button';hk.textContent='Heading';
+    var sv=document.createElement('button');sv.className='btn alt';sv.type='button';sv.textContent='Save';
+    var hookEl=document.createElement('div');hookEl.className='hook';
+    var idx=0;
+    hk.onclick=function(){
+      var t=HOOKS[idx%HOOKS.length].replace('{p}',p.name);idx++;hookEl.textContent=t;
+      try{navigator.clipboard.writeText(t)}catch(e){}
+    };
+    sv.onclick=function(){var s=store('spots')||[];s.unshift({name:p.name,note:KIND_LABEL[p.kind]+', '+(p.d/MI).toFixed(1)+' mi when saved',lat:p.lat,lon:p.lon});store('spots',s.slice(0,50));renderSaved();sv.textContent='Saved'};
+    a.appendChild(nav);a.appendChild(rate);a.appendChild(hk);a.appendChild(sv);
+    d.appendChild(h);d.appendChild(m);d.appendChild(a);d.appendChild(hookEl);list.appendChild(d);
   });
-  box.innerHTML = html;
+  var mq={all:'places to visit near me',food:'restaurants near me',cafe:'coffee shops near me',view:'scenic viewpoints near me',park:'parks near me',hist:'landmarks near me'}[cat]||'places to visit near me';
+  var more=document.createElement('div');more.className='place';
+  var mm=document.createElement('div');mm.className='meta';mm.textContent='Not on the list? Search Google Maps for more near you.';
+  var ma=document.createElement('a');ma.className='btn alt';ma.target='_blank';ma.rel='noopener';ma.textContent='More on Google Maps';
+  ma.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mq);
+  more.appendChild(mm);more.appendChild(ma);list.appendChild(more);
 }
 
-function getSaved() { try { return JSON.parse(localStorage.getItem("dmvSavedSpots") || "[]"); } catch (e) { return []; } }
-function setSaved(arr) { localStorage.setItem("dmvSavedSpots", JSON.stringify(arr)); }
-
-function saveSpot(id) {
-  const p = currentResults[id]; if (!p) return;
-  const saved = getSaved();
-  if (saved.some(function (s) { return s.name === p.name; })) { setStatus("Already saved: " + p.name); return; }
-  saved.push({ name: p.name, cat: CAT_LABEL[currentCat], lat: p.lat, lon: p.lon, when: new Date().toLocaleDateString() });
-  setSaved(saved);
-  renderSaved();
-  setStatus("Saved: " + p.name);
+function renderCats(){
+  var box=$('cats');box.textContent='';
+  CATS.forEach(function(c){
+    var b=document.createElement('button');b.className='chip';b.type='button';b.textContent=c.label;
+    b.setAttribute('aria-pressed',c.id===cat?'true':'false');
+    b.onclick=function(){cat=c.id;renderCats();render()};
+    box.appendChild(b);
+  });
+}
+function renderChecks(){
+  var box=$('checks');box.textContent='';
+  CHECKS.forEach(function(t){
+    var l=document.createElement('label');l.className='check';
+    var c=document.createElement('input');c.type='checkbox';
+    var s=document.createElement('span');s.textContent=t;
+    l.appendChild(c);l.appendChild(s);box.appendChild(l);
+  });
+}
+function renderSaved(){
+  var list=store('spots')||[],box=$('saved');box.textContent='';
+  if(!list.length){var p=document.createElement('p');p.className='note';p.textContent='Nothing saved yet. Tap Save on a place to plan it for outside Uber hours.';box.appendChild(p)}
+  list.forEach(function(s,i){
+    var d=document.createElement('div');d.className='spot';
+    var t=document.createElement('div');
+    var a=document.createElement('a');a.href='https://www.google.com/maps/dir/?api=1&destination='+s.lat+','+s.lon;a.target='_blank';a.rel='noopener';a.textContent=s.name;a.style.color='inherit';
+    var sm=document.createElement('small');sm.textContent=s.note;
+    t.appendChild(a);t.appendChild(sm);
+    var x=document.createElement('button');x.type='button';x.setAttribute('aria-label','Remove '+s.name);x.textContent='×';
+    x.onclick=function(){list.splice(i,1);store('spots',list);renderSaved()};
+    d.appendChild(t);d.appendChild(x);box.appendChild(d);
+  });
 }
 
-function renderSaved() {
-  const saved = getSaved();
-  const box = document.getElementById("savedList");
-  if (!saved.length) { box.innerHTML = "<p class='saved-empty'>Nothing saved yet. Tap &ldquo;Save&rdquo; on a spot to keep it here for later.</p>"; return; }
-  box.innerHTML = saved.map(function (s, i) {
-    const dir = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(s.name + ", " + s.lat + "," + s.lon);
-    return "<div class='card'><h3>" + esc(s.name) + "</h3><p class='meta'>" + esc(s.cat) + " &middot; saved " + esc(s.when) + "</p><div class='links'><a class='gold' href='" + dir + "' target='_blank' rel='noopener'>Directions</a><a href='#' onclick=\"removeSaved(" + i + ");return false;\">Remove</a></div></div>";
-  }).join("");
+function startLocation(){
+  if(!navigator.geolocation){setStatus('This browser cannot read your location.');return}
+  setStatus('Getting your location...');
+  if(watchId!==null)navigator.geolocation.clearWatch(watchId);
+  watchId=navigator.geolocation.watchPosition(function(g){
+    pos={lat:g.coords.latitude,lon:g.coords.longitude};
+    if(!lastPos||dist(pos.lat,pos.lon,lastPos.lat,lastPos.lon)>=800){search(false)}else{render()}
+    if(!items.length&&!busy&&!lastQ)search(true);
+  },function(err){
+    setStatus(err.code===1?'Location is blocked. Allow location for this site in your phone settings, then tap Refresh.':'Could not get your location. Tap Refresh to try again.');
+  },{enableHighAccuracy:false,maximumAge:30000,timeout:20000});
 }
 
-function removeSaved(i) { const s = getSaved(); s.splice(i, 1); setSaved(s); renderSaved(); }
-function clearSaved() { setSaved([]); renderSaved(); setStatus("Saved list cleared."); }
-
-function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-
-renderSaved();
+$('refresh').onclick=function(){if(!pos){startLocation();return}search(true)};
+$('radius').onchange=function(){if(pos)search(true)};
+$('nochains').onchange=render;
+renderCats();renderChecks();renderSaved();startLocation();
+})();
 </script>
 </body>
 </html>
