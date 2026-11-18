@@ -162,17 +162,18 @@ function search(force){
   var miles=+$('radius').value;
   setStatus('Looking within '+miles+' miles...');
   items=localSearch(miles);
-  while(!items.length){
-    var RADII=[1,2,5,10,20],nr=null;
-    for(var i=0;i<RADII.length;i++){if(RADII[i]>miles){nr=RADII[i];break}}
-    if(!nr)break;
-    miles=nr;$('radius').value=String(nr);
-    setStatus('Nothing that close — looking up to '+nr+' miles out...');
-    items=localSearch(nr);
-  }
   busy=false;render();
 }
 
+function closestInCat(){
+  var best=null,bd=Infinity;
+  PLACES.forEach(function(p){
+    if(!inCat({kind:p.k,halal:!!p.h}))return;
+    var d=dist(pos.lat,pos.lon,p.la,p.lo);
+    if(d<bd){bd=d;best={name:p.n,d:d}}
+  });
+  return best;
+}
 function render(){
   var list=$('list');list.textContent='';
   if(!pos)return;
@@ -180,7 +181,7 @@ function render(){
   rows.forEach(function(p){p.d=dist(pos.lat,pos.lon,p.lat,p.lon)});
   rows.sort(function(a,b){return (a.chain-b.chain)||(a.d-b.d)});
   rows=rows.slice(0,25);
-  setStatus(rows.length?rows.length+' places near you. Local spots are listed before chains.':'Nothing on the list for this choice. Try another option, or use the Google Maps link below.');
+  setStatus(rows.length?rows.length+' places near you. Local spots are listed before chains.':'Nothing on the list within '+$('radius').value+' miles.');
   rows.forEach(function(p){
     var d=el('div','place');
     d.appendChild(el('h3','',p.name));
@@ -196,6 +197,16 @@ function render(){
     a.appendChild(link('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.name+' '+p.lat+','+p.lon),'Check rating','btn alt'));
     d.appendChild(a);list.appendChild(d);
   });
+  if(!rows.length){
+    var empty=el('div','place');
+    empty.appendChild(el('h3','','Nothing on the list within '+$('radius').value+' miles.'));
+    var c=closestInCat();
+    if(c)empty.appendChild(el('div','meta','Closest '+({all:'place',food:'restaurant',halal:'Halal or Desi spot',cafe:'coffee spot','do':'thing to do',free:'free spot'})[cat]+': '+c.name+' — '+(c.d/MI).toFixed(1)+' mi away.'));
+    var wb=el('button','btn','Show places within 20 miles');wb.type='button';wb.style.marginTop='10px';
+    wb.onclick=function(){$('radius').value='20';search(true)};
+    empty.appendChild(wb);
+    list.appendChild(empty);
+  }
   var more=el('div','place');
   var mq={all:'places to visit near me',food:'restaurants near me',halal:'halal restaurants near me',cafe:'coffee shops near me','do':'things to do near me',free:'parks near me'}[cat]||'places to visit near me';
   var ma=el('div','acts');ma.appendChild(link('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mq),'More on Google Maps'));
