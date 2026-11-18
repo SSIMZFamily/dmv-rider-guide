@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DMVJourneyGuru Local Guide</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--mute:#6b6a64;--line:#dedcd3;--accent:#0b6e4f;--accent-ink:#fff;--tint:#e4f2ec}
+@media (prefers-color-scheme:dark){:root{--bg:#161614;--card:#222220;--ink:#f1efe8;--mute:#a8a69c;--line:#3a3935;--accent:#3fb68b;--accent-ink:#0c1a14;--tint:#1c2d26}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:680px;margin:0 auto;padding:16px 16px 48px}
+header{padding:8px 0 12px}
+.brand{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:26px;margin:2px 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--mute);margin:0}
+.trust{background:var(--tint);border-radius:10px;padding:10px 12px;margin:0 0 14px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:9px 14px;font-size:15px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px;font-size:15px}
+select{padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px}
+a.btn,button.btn{display:inline-block;text-align:center;text-decoration:none;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:12px 16px;font-size:15px;font-weight:600;cursor:pointer}
+.alt{background:transparent!important;color:var(--ink)!important;border:1px solid var(--line)!important}
+.big{width:100%;font-size:17px;padding:15px}
+.status{color:var(--mute);font-size:14px;margin:0 0 10px;min-height:20px}
+.place{padding:12px 0;border-bottom:1px solid var(--line)}
+.place:last-child{border-bottom:0}
+.place h3{font-size:17px;margin:0}
+.meta{color:var(--mute);font-size:14px;margin:2px 0 8px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.note{color:var(--mute);font-size:14px}
+.pick{border-left:4px solid var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="brand">DMVJourneyGuru</div>
+  <h1>Your free local guide</h1>
+  <p class="sub">Food, views and things to do near where you are right now.</p>
+</header>
+
+<div class="trust">Free. No login, no payment, no download. Your location is used only to find places near you. It is not saved or shared by this guide.</div>
+
+<section class="card pick" id="pickCard" hidden aria-labelledby="pick-h">
+  <h2 id="pick-h">This week's pick</h2>
+  <div id="pickBody"></div>
+</section>
+
+<section class="card" aria-labelledby="near-h">
+  <h2 id="near-h">Near you</h2>
+  <button class="btn big" id="go" type="button">Find places near me</button>
+  <div id="controls" hidden>
+    <div class="chips" id="cats" role="group" aria-label="What are you looking for" style="margin-top:12px"></div>
+    <div class="bar">
+      <label>Within <select id="radius"><option value="1">1 mile</option><option value="2" selected>2 miles</option><option value="5">5 miles</option></select></label>
+      <button class="btn alt" id="refresh" type="button">Refresh</button>
+    </div>
+  </div>
+  <p class="status" id="status" aria-live="polite"></p>
+  <div id="list"></div>
+  <p class="note">Places come from OpenStreetMap, so there are no star ratings here. Tap Check rating to see reviews before you go. Hours are shown only when the map lists them, so confirm before you head over. Halal and Desi results are based on map tags, so ask the restaurant if it matters to you.</p>
+</section>
+
+<section class="card" id="gemsCard" hidden aria-labelledby="gems-h">
+  <h2 id="gems-h">Hidden gems</h2>
+  <div id="gems"></div>
+</section>
+
+<section class="card" id="followCard" hidden aria-labelledby="follow-h">
+  <h2 id="follow-h">Want a new local pick every week?</h2>
+  <div class="row" id="follow"></div>
+  <div class="row" id="suggestRow" style="margin-top:10px" hidden></div>
+</section>
+</main>
+
+<script>
+(function(){
+/* ===== EDIT THIS BLOCK. Anything left empty stays hidden from riders. ===== */
+var CONFIG={
+  // This week's pick. Change the three lines each week.
+  pick:{title:'Annapolis City Dock at sunset',text:'Free to walk, boats coming in, and the best golden-hour light on the Chesapeake. Grab a crab cake nearby after.',videoUrl:'https://www.tiktok.com/@dmvjourneyguru/video/7708426907678706975'},
+  // Your own hidden gems. Add as many as you like.
+  // Example: {name:'Place name',area:'Town',note:'One line on why',videoUrl:'https://...'}
+  gems:[
+    {name:'Gravelly Point Park',area:'Arlington, VA',note:'Free park right by the runway — planes land just overhead at DCA. Best free thrill in the DMV.'},
+    {name:'Kenilworth Park & Aquatic Gardens',area:'Washington, DC',note:'Free National Park Service gardens — lotus and water lilies in summer, quiet boardwalks year-round.'},
+    {name:'Theodore Roosevelt Island',area:'Washington, DC',note:'Free island trails in the middle of the Potomac — woods, river views, and a memorial, minutes from downtown.'},
+    {name:'Annapolis City Dock & Ego Alley',area:'Annapolis, MD',note:'Free to stroll — boats, watermen, and the harbour at the foot of Main Street. Sunset is the moment.'},
+    {name:'Solomons Island boardwalk',area:'Solomons, MD',note:'Free waterfront walk on the Patuxent — calm water, seafood spots, and the best quiet sunset in Southern Maryland.'}
+  ],
+  // Your channel links, for example 'https://www.tiktok.com/@yourhandle'
+  follow:{tiktok:'https://www.tiktok.com/@dmvjourneyguru',youtube:'https://www.youtube.com/@DMVJourneyGuru',instagram:'https://www.instagram.com/dmvjourneyguru/',etsy:'https://subuvision.etsy.com'},
+  // Where riders send spot suggestions: a Google Form link, or an email address.
+  suggestUrl:'',
+  suggestEmail:'dmvjourneyguru@gmail.com'
+};
+/* ===== End of the edit block. ===== */
+
+var CATS=[
+ {id:'all',label:'All'},
+ {id:'food',label:'Eat'},
+ {id:'halal',label:'Halal or Desi'},
+ {id:'cafe',label:'Coffee and sweets'},
+ {id:'do',label:'Things to do'},
+ {id:'free',label:'Free outdoors'}
+];
+var ENDPOINTS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+var MI=1609.344;
+var cat='all',pos=null,items=[],lastQ=0,lastPos=null,busy=false,watchId=null;
+function $(i){return document.getElementById(i)}
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e}
+function link(href,text,cls){var a=el('a',cls||'btn',text);a.href=href;a.target='_blank';a.rel='noopener';return a}
+function ok(u){return typeof u==='string'&&/^https:\/\//.test(u)}
+function dist(a,b,c,d){var R=6371000,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r;var h=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)*Math.sin(y/2);return 2*R*Math.asin(Math.sqrt(h))}
+function setStatus(t){$('status').textContent=t}
+
+function kindOf(t){
+  if(t.amenity==='restaurant'||t.amenity==='fast_food')return 'food';
+  if(t.amenity==='cafe'||t.amenity==='ice_cream'||t.shop==='bakery'||t.shop==='pastry'||t.shop==='confectionery')return 'cafe';
+  if(t.tourism==='viewpoint'||t.natural==='beach')return 'view';
+  if(t.leisure==='park'||t.leisure==='nature_reserve')return 'park';
+  if(t.historic||t.tourism==='attraction'||t.tourism==='museum')return 'hist';
+  return null;
+}
+var LABEL={food:'Restaurant',cafe:'Coffee or sweets',view:'View',park:'Park',hist:'Sight or landmark'};
+function isHalalDesi(t){
+  var c=(t.cuisine||'').toLowerCase();
+  return t['diet:halal']==='yes'||/pakistani|indian|afghan|bangladeshi|halal/.test(c);
+}
+function inCat(p){
+  if(cat==='all')return true;
+  if(cat==='food')return p.kind==='food';
+  if(cat==='halal')return p.halal;
+  if(cat==='cafe')return p.kind==='cafe';
+  if(cat==='do')return p.kind==='hist'||p.kind==='view'||p.kind==='park';
+  if(cat==='free')return p.kind==='park'||p.kind==='view';
+  return true;
+}
+
+function query(lat,lon,miles){
+  var r=Math.round(miles*MI),a='(around:'+r+','+lat+','+lon+')';
+  return '[out:json][timeout:25];('+
+   'nwr'+a+'["amenity"~"^(restaurant|fast_food|cafe|ice_cream)$"]["name"];'+
+   'nwr'+a+'["shop"~"^(bakery|pastry|confectionery)$"]["name"];'+
+   'nwr'+a+'["tourism"~"^(viewpoint|attraction|museum)$"]["name"];'+
+   'nwr'+a+'["natural"="beach"]["name"];'+
+   'nwr'+a+'["leisure"~"^(park|nature_reserve)$"]["name"];'+
+   'nwr'+a+'["historic"]["name"];'+
+   ');out center tags 250;';
+}
+function fetchOverpass(q,i){
+  i=i||0;
+  return fetch(ENDPOINTS[i],{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}})
+   .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})
+   .catch(function(e){if(i+1<ENDPOINTS.length)return fetchOverpass(q,i+1);throw e});
+}
+function search(force){
+  if(!pos||busy)return;
+  var now=Date.now();
+  if(!force&&lastPos&&dist(pos.lat,pos.lon,lastPos.lat,lastPos.lon)<800)return;
+  if(!force&&now-lastQ<60000)return;
+  busy=true;lastQ=now;lastPos={lat:pos.lat,lon:pos.lon};
+  setStatus('Looking around you...');
+  fetchOverpass(query(pos.lat,pos.lon,+$('radius').value)).then(function(j){
+    var seen={},out=[];
+    (j.elements||[]).forEach(function(e){
+      var t=e.tags||{},k=kindOf(t);if(!k||!t.name)return;
+      var lat=e.lat!==undefined?e.lat:(e.center&&e.center.lat),lon=e.lon!==undefined?e.lon:(e.center&&e.center.lon);
+      if(lat===undefined||lon===undefined)return;
+      var key=t.name.toLowerCase()+'|'+Math.round(lat*1000)+'|'+Math.round(lon*1000);
+      if(seen[key])return;seen[key]=1;
+      out.push({name:t.name,kind:k,lat:lat,lon:lon,halal:isHalalDesi(t),chain:!!(t.brand||t['brand:wikidata']),cuisine:t.cuisine?t.cuisine.replace(/;/g,', ').replace(/_/g,' '):'',hours:t.opening_hours||''});
+    });
+    items=out;busy=false;render();
+  }).catch(function(){busy=false;setStatus('Could not load places. Check your connection and tap Refresh.')});
+}
+
+function render(){
+  var list=$('list');list.textContent='';
+  if(!pos)return;
+  var rows=items.filter(inCat);
+  rows.forEach(function(p){p.d=dist(pos.lat,pos.lon,p.lat,p.lon)});
+  rows.sort(function(a,b){return (a.chain-b.chain)||(a.d-b.d)});
+  rows=rows.slice(0,25);
+  setStatus(rows.length?rows.length+' places near you. Local spots are listed before chains.':'Nothing found for this choice. Try a bigger radius or another option.');
+  rows.forEach(function(p){
+    var d=el('div','place');
+    d.appendChild(el('h3','',p.name));
+    var bits=[(p.d/MI).toFixed(1)+' mi',LABEL[p.kind]];
+    if(p.cuisine)bits.push(p.cuisine);
+    if(p.hours)bits.push('Hours: '+p.hours);
+    d.appendChild(el('div','meta',bits.join(' · ')));
+    var a=el('div','acts');
+    a.appendChild(link('https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lon,'Directions'));
+    a.appendChild(link('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.name+' '+p.lat+','+p.lon),'Check rating','btn alt'));
+    d.appendChild(a);list.appendChild(d);
+  });
+}
+
+function renderCats(){
+  var box=$('cats');box.textContent='';
+  CATS.forEach(function(c){
+    var b=el('button','chip',c.label);b.type='button';
+    b.setAttribute('aria-pressed',c.id===cat?'true':'false');
+    b.onclick=function(){cat=c.id;renderCats();render()};
+    box.appendChild(b);
+  });
+}
+
+function renderPick(){
+  var p=CONFIG.pick;if(!p||!p.title)return;
+  $('pickCard').hidden=false;var b=$('pickBody');
+  b.appendChild(el('h3','',p.title));
+  if(p.text)b.appendChild(el('p','',p.text));
+  if(ok(p.videoUrl))b.appendChild(link(p.videoUrl,'Watch the video'));
+}
+function renderGems(){
+  if(!CONFIG.gems.length)return;
+  $('gemsCard').hidden=false;var box=$('gems');
+  CONFIG.gems.forEach(function(g){
+    var d=el('div','place');d.appendChild(el('h3','',g.name));
+    var meta=[g.area,g.note].filter(Boolean).join(' · ');if(meta)d.appendChild(el('div','meta',meta));
+    var a=el('div','acts');
+    a.appendChild(link('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(g.name+' '+(g.area||'')),'Directions'));
+    if(ok(g.videoUrl))a.appendChild(link(g.videoUrl,'See the video','btn alt'));
+    d.appendChild(a);box.appendChild(d);
+  });
+}
+function renderFollow(){
+  var f=CONFIG.follow||{},box=$('follow'),any=false;
+  [['tiktok','TikTok'],['youtube','YouTube'],['instagram','Instagram'],['etsy','Shop']].forEach(function(x){
+    if(ok(f[x[0]])){box.appendChild(link(f[x[0]],x[1]));any=true}
+  });
+  var s=$('suggestRow');
+  if(ok(CONFIG.suggestUrl)){s.appendChild(link(CONFIG.suggestUrl,'Suggest a spot','btn alt'));s.hidden=false;any=true}
+  else if(CONFIG.suggestEmail){s.appendChild(link('mailto:'+CONFIG.suggestEmail+'?subject='+encodeURIComponent('Spot suggestion'),'Suggest a spot','btn alt'));s.hidden=false;any=true}
+  if(any)$('followCard').hidden=false;
+}
+
+function startLocation(){
+  if(!navigator.geolocation){setStatus('This browser cannot read your location.');return}
+  setStatus('Getting your location...');
+  $('controls').hidden=false;$('go').hidden=true;
+  if(watchId!==null)navigator.geolocation.clearWatch(watchId);
+  watchId=navigator.geolocation.watchPosition(function(g){
+    pos={lat:g.coords.latitude,lon:g.coords.longitude};
+    if(!lastPos||dist(pos.lat,pos.lon,lastPos.lat,lastPos.lon)>=800){search(false)}else{render()}
+  },function(err){
+    $('go').hidden=false;
+    setStatus(err.code===1?'Location is blocked. Allow location for this site in your phone settings, then try again.':'Could not get your location. Please try again.');
+  },{enableHighAccuracy:false,maximumAge:30000,timeout:20000});
+}
+
+$('go').onclick=startLocation;
+$('refresh').onclick=function(){if(!pos){startLocation();return}search(true)};
+$('radius').onchange=function(){if(pos)search(true)};
+renderCats();renderPick();renderGems();renderFollow();
+})();
+</script>
+</body>
+</html>

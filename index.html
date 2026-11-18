@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Film Spot Finder — DMVJourneyGuru (private)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #101820; color: #eef2f5; line-height: 1.5; padding: 16px; max-width: 680px; margin: 0 auto; }
+  header { text-align: center; padding: 16px 0 6px; }
+  h1 { font-size: 24px; }
+  .sub { color: #9fb3c0; font-size: 14px; }
+  .warn { background: #5a2b00; border: 1px solid #a35400; color: #ffd9a8; border-radius: 8px; padding: 10px 14px; margin: 14px 0; text-align: center; font-size: 14px; font-weight: 600; }
+  button { display: block; width: 100%; padding: 13px; margin: 8px 0; font-size: 16px; font-weight: 700; border: none; border-radius: 10px; background: #f5b301; color: #14261a; cursor: pointer; }
+  button.secondary { background: #22303c; color: #eef2f5; border: 1px solid #3d5568; }
+  button.small { width: auto; display: inline-block; padding: 8px 14px; font-size: 14px; margin: 4px 6px 0 0; }
+  .cats { display: none; }
+  .cats.show { display: block; }
+  .cat-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .cat-row button { width: auto; flex: 1 1 45%; padding: 11px 6px; font-size: 14px; margin: 0; }
+  .cat-row button.active { background: #f5b301; color: #14261a; }
+  .card { background: #1a2833; border: 1px solid #2c4252; border-radius: 10px; padding: 14px; margin: 10px 0; }
+  .card h3 { font-size: 18px; }
+  .card .meta { color: #9fb3c0; font-size: 13px; margin: 2px 0 6px; }
+  .card .hook { background: #0f2a1e; border-left: 3px solid #1d7a3d; padding: 8px 10px; margin: 8px 0; font-size: 14px; color: #cfe8d4; }
+  .card .links a { display: inline-block; margin: 4px 8px 0 0; padding: 8px 12px; border-radius: 8px; background: #2c4252; color: #fff; text-decoration: none; font-size: 14px; font-weight: 600; }
+  .card .links a.gold { background: #f5b301; color: #14261a; }
+  .note { font-size: 13px; color: #9fb3c0; margin: 10px 0; }
+  .section { margin: 22px 0; }
+  .section h2 { font-size: 19px; border-bottom: 2px solid #1d7a3d; padding-bottom: 6px; margin-bottom: 10px; }
+  .status { text-align: center; color: #9fb3c0; font-size: 14px; margin: 8px 0; min-height: 20px; }
+  .saved-empty { color: #9fb3c0; font-size: 14px; }
+  footer { text-align: center; color: #6b8291; font-size: 12px; margin: 28px 0 10px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Film Spot Finder</h1>
+  <p class="sub">Private tool for DMVJourneyGuru — find places to film near where you are parked.</p>
+</header>
+
+<div class="warn">Use only when parked. Never while driving. No riders in any frame, no audio of anyone&rsquo;s conversation.</div>
+
+<button id="findBtn" onclick="findSpots()">Find spots near me</button>
+<div class="status" id="status"></div>
+
+<div class="cats" id="cats">
+  <div class="cat-row">
+    <button data-cat="restaurants" onclick="pickCat('restaurants', this)">Restaurants</button>
+    <button data-cat="coffee" onclick="pickCat('coffee', this)">Coffee &amp; bakeries</button>
+    <button data-cat="views" onclick="pickCat('views', this)">Views</button>
+    <button data-cat="parks" onclick="pickCat('parks', this)">Parks</button>
+    <button data-cat="landmarks" onclick="pickCat('landmarks', this)">Landmarks</button>
+  </div>
+  <p class="note">Showing places within about 3 miles. Tap a category to switch. Ratings come from Google — OpenStreetMap has no star ratings.</p>
+</div>
+
+<div id="results"></div>
+
+<div class="section">
+  <h2>Saved spots</h2>
+  <div id="savedList"><p class="saved-empty">Nothing saved yet. Tap &ldquo;Save&rdquo; on a spot to keep it here for later.</p></div>
+  <button class="secondary" onclick="clearSaved()">Clear saved list</button>
+</div>
+
+<p class="note">Location is used only to search for nearby places. It is not stored or sent anywhere except to the OpenStreetMap search. Ask a restaurant before filming inside — outside shots of the storefront and food are fine. Don&rsquo;t put any chain or licensed logo in a video heading.</p>
+
+<footer>DMVJourneyGuru &middot; private tool &middot; Made with OpenStreetMap data &copy; OpenStreetMap contributors</footer>
+
+<script>
+let userLat = null, userLon = null, currentCat = "restaurants";
+let currentResults = {};
+
+const QUERIES = {
+  restaurants: 'nwr["amenity"="restaurant"](around:5000,{lat},{lon});',
+  coffee: 'nwr["amenity"="cafe"](around:5000,{lat},{lon});nwr["shop"="bakery"](around:5000,{lat},{lon});',
+  views: 'nwr["tourism"="viewpoint"](around:5000,{lat},{lon});nwr["tourism"="attraction"](around:5000,{lat},{lon});',
+  parks: 'nwr["leisure"="park"](around:5000,{lat},{lon});nwr["leisure"="garden"](around:5000,{lat},{lon});',
+  landmarks: 'nwr["tourism"~"museum|gallery|monument|memorial|castle"](around:5000,{lat},{lon});nwr["historic"~"monument|memorial|building"](around:5000,{lat},{lon});nwr["amenity"="place_of_worship"](around:5000,{lat},{lon});'
+};
+const CAT_LABEL = { restaurants: "Restaurants", coffee: "Coffee & bakeries", views: "Views", parks: "Parks", landmarks: "Landmarks" };
+
+const HOOKS = {
+  restaurants: ["The {n} plate you have to see in {a}", "Lunch break: {n} — worth the stop?", "EXIT — {n}, {a}"],
+  coffee: ["The {n} coffee stop your morning needs", "Sweet stop: {n} in {a}", "EXIT — {n}, {a}"],
+  views: ["The {a} view that stops traffic", "Golden hour at {n}", "EXIT — {n}, {a}"],
+  parks: ["The quietest green in {a}: {n}", "Free in the DMV: {n}", "EXIT — {n}, {a}"],
+  landmarks: ["The {a} landmark most drivers pass: {n}", "{n} — the story behind it", "EXIT — {n}, {a}"]
+};
+
+function setStatus(t) { document.getElementById("status").textContent = t; }
+
+function findSpots() {
+  if (!navigator.geolocation) { setStatus("Location is not available on this device."); return; }
+  setStatus("Finding your location…");
+  navigator.geolocation.getCurrentPosition(function (pos) {
+    userLat = pos.coords.latitude; userLon = pos.coords.longitude;
+    document.getElementById("cats").classList.add("show");
+    setStatus("Got it — pick a category below.");
+    loadCat("restaurants");
+    document.querySelector('.cat-row button[data-cat="restaurants"]').classList.add("active");
+  }, function () {
+    setStatus("Location was not shared. Allow location for this page, then tap again.");
+  }, { timeout: 15000 });
+}
+
+function pickCat(cat, btn) {
+  document.querySelectorAll(".cat-row button").forEach(function (b) { b.classList.remove("active"); });
+  btn.classList.add("active");
+  loadCat(cat);
+}
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371, dLa = (lat2 - lat1) * Math.PI / 180, dLo = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLa / 2) * Math.sin(dLa / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLo / 2) * Math.sin(dLo / 2);
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function loadCat(cat) {
+  currentCat = cat;
+  const box = document.getElementById("results");
+  box.innerHTML = "<p class='status'>Searching nearby " + CAT_LABEL[cat].toLowerCase() + "…</p>";
+  const q = "[out:json][timeout:25];(" + QUERIES[cat].split("{lat}").join(userLat).split("{lon}").join(userLon) + ");out center 40;";
+  fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST", body: "data=" + encodeURIComponent(q),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+  }).then(function (r) { return r.json(); }).then(function (data) {
+    const seen = {}, list = [];
+    (data.elements || []).forEach(function (el) {
+      const t = el.tags || {}; if (!t.name) return;
+      const key = t.name.toLowerCase(); if (seen[key]) return; seen[key] = 1;
+      const lat = el.lat || (el.center && el.center.lat), lon = el.lon || (el.center && el.center.lon);
+      if (!lat || !lon) return;
+      list.push({ name: t.name, cuisine: t.cuisine || "", addr: [t["addr:street"], t["addr:housenumber"]].filter(Boolean).join(" ") || "", lat: lat, lon: lon, dist: haversineKm(userLat, userLon, lat, lon) });
+    });
+    list.sort(function (a, b) { return a.dist - b.dist; });
+    renderResults(list.slice(0, 12));
+  }).catch(function () {
+    box.innerHTML = "<p class='status'>Could not reach the map search. Check your connection and try again.</p>";
+  });
+}
+
+function hookFor(p) {
+  const area = areaName();
+  const templates = HOOKS[currentCat] || HOOKS.restaurants;
+  const t = templates[Math.floor(Math.random() * templates.length)];
+  return t.split("{n}").join(p.name).split("{a}").join(area);
+}
+
+function areaName() {
+  // Rough label from coordinates — DC / Maryland / Virginia / Annapolis area.
+  if (userLat > 38.99 && userLat < 39.06 && userLon > -77.12 && userLon < -76.9) return "DC";
+  if (userLat > 38.9 && userLat < 39.05 && userLon > -77.2 && userLon < -76.9) return "the DMV";
+  if (userLat > 38.9 && userLat < 39.1 && userLon > -77.5 && userLon < -77.0) return "Northern Virginia";
+  if (userLat > 38.9 && userLat < 39.2 && userLon > -77.3 && userLon < -76.9) return "Maryland";
+  if (userLat > 38.9 && userLat < 39.05 && userLon > -76.6 && userLon < -76.4) return "Annapolis";
+  return "the DMV";
+}
+
+function renderResults(list) {
+  const box = document.getElementById("results");
+  currentResults = {};
+  if (!list.length) {
+    box.innerHTML = "<div class='card'><h3>No spots found nearby</h3><p class='meta'>Try another category, or move a little closer to town — this search covers about 3 miles.</p></div>";
+    return;
+  }
+  let html = "<h2 class='section' style='font-size:19px;border-bottom:2px solid #1d7a3d;padding-bottom:6px;'>" + CAT_LABEL[currentCat] + " near you</h2>";
+  list.forEach(function (p, i) {
+    const id = "r" + i;
+    currentResults[id] = p;
+    const hook = hookFor(p);
+    const dir = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(p.name + ", " + p.lat + "," + p.lon);
+    const rate = "https://www.google.com/maps/search/" + encodeURIComponent(p.name + " reviews");
+    html += "<div class='card'><h3>" + esc(p.name) + "</h3>"
+      + "<p class='meta'>" + p.dist.toFixed(1) + " mi away" + (p.cuisine ? " &middot; " + esc(p.cuisine) : "") + (p.addr ? " &middot; " + esc(p.addr) : "") + "</p>"
+      + "<div class='hook'>Heading idea: &ldquo;" + esc(hook) + "&rdquo;</div>"
+      + "<div class='links'><a class='gold' href='" + dir + "' target='_blank' rel='noopener'>Directions</a>"
+      + "<a href='" + rate + "' target='_blank' rel='noopener'>Check rating</a></div>"
+      + "<div><button class='small' onclick=\"saveSpot('" + id + "')\">Save</button></div></div>";
+  });
+  box.innerHTML = html;
+}
+
+function getSaved() { try { return JSON.parse(localStorage.getItem("dmvSavedSpots") || "[]"); } catch (e) { return []; } }
+function setSaved(arr) { localStorage.setItem("dmvSavedSpots", JSON.stringify(arr)); }
+
+function saveSpot(id) {
+  const p = currentResults[id]; if (!p) return;
+  const saved = getSaved();
+  if (saved.some(function (s) { return s.name === p.name; })) { setStatus("Already saved: " + p.name); return; }
+  saved.push({ name: p.name, cat: CAT_LABEL[currentCat], lat: p.lat, lon: p.lon, when: new Date().toLocaleDateString() });
+  setSaved(saved);
+  renderSaved();
+  setStatus("Saved: " + p.name);
+}
+
+function renderSaved() {
+  const saved = getSaved();
+  const box = document.getElementById("savedList");
+  if (!saved.length) { box.innerHTML = "<p class='saved-empty'>Nothing saved yet. Tap &ldquo;Save&rdquo; on a spot to keep it here for later.</p>"; return; }
+  box.innerHTML = saved.map(function (s, i) {
+    const dir = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(s.name + ", " + s.lat + "," + s.lon);
+    return "<div class='card'><h3>" + esc(s.name) + "</h3><p class='meta'>" + esc(s.cat) + " &middot; saved " + esc(s.when) + "</p><div class='links'><a class='gold' href='" + dir + "' target='_blank' rel='noopener'>Directions</a><a href='#' onclick=\"removeSaved(" + i + ");return false;\">Remove</a></div></div>";
+  }).join("");
+}
+
+function removeSaved(i) { const s = getSaved(); s.splice(i, 1); setSaved(s); renderSaved(); }
+function clearSaved() { setSaved([]); renderSaved(); setStatus("Saved list cleared."); }
+
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+renderSaved();
+</script>
+</body>
+</html>
