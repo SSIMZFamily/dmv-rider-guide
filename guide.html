@@ -110,7 +110,7 @@ var CATS=[
  {id:'do',label:'Things to do'},
  {id:'free',label:'Free outdoors'}
 ];
-var ENDPOINTS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+var ENDPOINTS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
 var MI=1609.344;
 var cat='all',pos=null,items=[],lastQ=0,lastPos=null,busy=false,watchId=null;
 function $(i){return document.getElementById(i)}
@@ -145,20 +145,21 @@ function inCat(p){
 
 function query(lat,lon,miles){
   var r=Math.round(miles*MI),a='(around:'+r+','+lat+','+lon+')';
-  return '[out:json][timeout:25];('+
-   'nwr'+a+'["amenity"~"^(restaurant|fast_food|cafe|ice_cream)$"]["name"];'+
-   'nwr'+a+'["shop"~"^(bakery|pastry|confectionery)$"]["name"];'+
-   'nwr'+a+'["tourism"~"^(viewpoint|attraction|museum)$"]["name"];'+
-   'nwr'+a+'["natural"="beach"]["name"];'+
-   'nwr'+a+'["leisure"~"^(park|nature_reserve)$"]["name"];'+
-   'nwr'+a+'["historic"]["name"];'+
-   ');out center tags 400;';
+  var F='nwr'+a+'["amenity"~"^(restaurant|fast_food)$"]["name"];';
+  var C='nwr'+a+'["amenity"~"^(cafe|ice_cream)$"]["name"];nwr'+a+'["shop"~"^(bakery|pastry|confectionery)$"]["name"];';
+  var V='nwr'+a+'["tourism"~"^(viewpoint|attraction|museum)$"]["name"];nwr'+a+'["natural"="beach"]["name"];';
+  var P='nwr'+a+'["leisure"~"^(park|nature_reserve)$"]["name"];';
+  var H='nwr'+a+'["historic"]["name"];';
+  var parts={all:F+C+V+P+H,food:F,halal:F,cafe:C,'do':V+P+H,free:P+V};
+  return '[out:json][timeout:15];('+(parts[cat]||parts.all)+');out center tags 400;';
 }
 function fetchOverpass(q,i){
   i=i||0;
-  return fetch(ENDPOINTS[i],{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}})
-   .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})
-   .catch(function(e){if(i+1<ENDPOINTS.length)return fetchOverpass(q,i+1);throw e});
+  var ctrl=new AbortController();
+  var to=setTimeout(function(){ctrl.abort()},20000);
+  return fetch(ENDPOINTS[i],{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'},signal:ctrl.signal})
+   .then(function(r){clearTimeout(to);if(!r.ok)throw new Error('http '+r.status);return r.json()})
+   .catch(function(e){clearTimeout(to);if(i+1<ENDPOINTS.length){setStatus('That map server was slow — trying another one...');return fetchOverpass(q,i+1)}throw e});
 }
 var RADII=[1,2,5,10,20];
 function nextRadius(cur){for(var i=0;i<RADII.length;i++){if(RADII[i]>cur)return RADII[i]}return null}
@@ -168,7 +169,7 @@ function search(force){
   if(!force&&lastPos&&dist(pos.lat,pos.lon,lastPos.lat,lastPos.lon)<800)return;
   if(!force&&now-lastQ<60000)return;
   busy=true;lastQ=now;lastPos={lat:pos.lat,lon:pos.lon};
-  setStatus('Looking around you...');
+  setStatus('Looking within '+$('radius').value+' miles...');
   fetchOverpass(query(pos.lat,pos.lon,+$('radius').value)).then(function(j){
     var seen={},out=[];
     (j.elements||[]).forEach(function(e){
