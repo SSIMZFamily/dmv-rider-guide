@@ -58,7 +58,7 @@ a.btn,button.btn{display:inline-block;text-align:center;text-decoration:none;bac
   <div id="controls" hidden>
     <div class="chips" id="cats" role="group" aria-label="What are you looking for" style="margin-top:12px"></div>
     <div class="bar">
-      <label>Within <select id="radius"><option value="1">1 mile</option><option value="2" selected>2 miles</option><option value="5">5 miles</option></select></label>
+      <label>Within <select id="radius"><option value="1">1 mile</option><option value="2" selected>2 miles</option><option value="5">5 miles</option><option value="10">10 miles</option><option value="20">20 miles</option></select></label>
       <button class="btn alt" id="refresh" type="button">Refresh</button>
     </div>
   </div>
@@ -152,7 +152,7 @@ function query(lat,lon,miles){
    'nwr'+a+'["natural"="beach"]["name"];'+
    'nwr'+a+'["leisure"~"^(park|nature_reserve)$"]["name"];'+
    'nwr'+a+'["historic"]["name"];'+
-   ');out center tags 250;';
+   ');out center tags 400;';
 }
 function fetchOverpass(q,i){
   i=i||0;
@@ -160,6 +160,8 @@ function fetchOverpass(q,i){
    .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()})
    .catch(function(e){if(i+1<ENDPOINTS.length)return fetchOverpass(q,i+1);throw e});
 }
+var RADII=[1,2,5,10,20];
+function nextRadius(cur){for(var i=0;i<RADII.length;i++){if(RADII[i]>cur)return RADII[i]}return null}
 function search(force){
   if(!pos||busy)return;
   var now=Date.now();
@@ -177,7 +179,12 @@ function search(force){
       if(seen[key])return;seen[key]=1;
       out.push({name:t.name,kind:k,lat:lat,lon:lon,halal:isHalalDesi(t),chain:!!(t.brand||t['brand:wikidata']),cuisine:t.cuisine?t.cuisine.replace(/;/g,', ').replace(/_/g,' '):'',hours:t.opening_hours||''});
     });
-    items=out;busy=false;render();
+    items=out;busy=false;
+    if(!out.length){
+      var nr=nextRadius(+$('radius').value);
+      if(nr){$('radius').value=String(nr);setStatus('Nothing that close — looking up to '+nr+' miles out...');search(true);return}
+    }
+    render();
   }).catch(function(){busy=false;setStatus('Could not load places. Check your connection and tap Refresh.')});
 }
 
@@ -188,7 +195,8 @@ function render(){
   rows.forEach(function(p){p.d=dist(pos.lat,pos.lon,p.lat,p.lon)});
   rows.sort(function(a,b){return (a.chain-b.chain)||(a.d-b.d)});
   rows=rows.slice(0,25);
-  setStatus(rows.length?rows.length+' places near you. Local spots are listed before chains.':'Nothing found for this choice. Try a bigger radius or another option.');
+  if(!rows.length&&items.length){setStatus('Nothing for this choice nearby, but '+items.length+' other places are around you — try All.')}
+  else setStatus(rows.length?rows.length+' places near you. Local spots are listed before chains.':'Nothing found nearby for this choice, even out to 20 miles. Try another option.');
   rows.forEach(function(p){
     var d=el('div','place');
     d.appendChild(el('h3','',p.name));
