@@ -60,7 +60,7 @@ h1,h2,p{margin:0}
 .fine .icon{color:var(--green);width:1.3em;height:1.3em;margin-top:2px}
 @media (prefers-color-scheme:dark){.fine .icon{color:#5fc395}}
 @media (prefers-reduced-motion:reduce){.lane{animation:none}}
-.support{margin-top:18px;padding:16px;border-radius:14px;border:2px solid var(--green)}.support p{font-size:17px;line-height:1.45}.support a{display:flex;align-items:center;justify-content:center;margin-top:12px;min-height:48px;border-radius:12px;background:var(--green);color:#fff;font:700 18px var(--body);text-decoration:none}
+.support{margin-top:18px;padding:16px;border-radius:14px;border:2px solid var(--green)}.support p{font-size:17px;line-height:1.45}#supportLinks a{display:flex;align-items:center;justify-content:center;margin-top:12px;min-height:48px;border-radius:12px;background:var(--green);color:#fff;font:700 18px var(--body);text-decoration:none}
 </style>
 </head>
 <body>
@@ -79,7 +79,7 @@ h1,h2,p{margin:0}
   <h2 id="f-h">Support the cause</h2>
   <p class="hint">One subscribe takes five seconds. Every one counts.</p>
   <div class="follow" id="follow"></div>
-  <div class="support" id="support" hidden><p id="supportText"></p><a id="supportLink" target="_blank" rel="noopener"></a></div>
+  <div class="support" id="support" hidden><p id="supportText"></p><div id="supportLinks"></div></div>
   <div class="codebar" id="codeBar" hidden><span id="codeText"></span><button type="button" id="copyCode">Copy code</button></div>
 </section>
 
@@ -96,7 +96,7 @@ h1,h2,p{margin:0}
 /* ===== EDIT THIS BLOCK ===== */
 var CONFIG={
   // Direct support section. Keep enabled:false until Uber Driver Support confirms in writing that it is allowed.
-  support:{enabled:false,label:'Support with Venmo',url:'https://venmo.com/u/DMVJourneyGuru',text:'Tips and support help me reach this milestone sooner. Thank you, and never expected.'},
+  support:{enabled:false,links:[{label:'Support with Venmo',url:'https://venmo.com/u/DMVJourneyGuru'},{label:'Support with Cash App',url:'https://cash.app/$DMVJourneyGuru'}],text:'Tips and support help me reach this milestone sooner. Thank you, and never expected.'},
   follow:{tiktok:'https://www.tiktok.com/@dmvjourneyguru',youtube:'https://www.youtube.com/@DMVJourneyGuru',instagram:'https://www.instagram.com/dmvjourneyguru/',etsy:'https://subuvision.etsy.com'},
   // One story per driver key (the link ?d=key). 'default' is used when there is no key. Each story is a list of paragraphs; the first is shown large.
   stories:{
@@ -145,8 +145,10 @@ var fb=$('follow');
   var t=el('span');t.appendChild(document.createTextNode(NAME[k]));t.appendChild(el('small','',SUB[k]));
   a.appendChild(ic);a.appendChild(t);a.appendChild(el('span','go','›'));fb.appendChild(a);
 });
-if(CONFIG.support&&CONFIG.support.enabled&&ok(CONFIG.support.url)){
-  $('supportText').textContent=CONFIG.support.text;var sl=$('supportLink');sl.href=CONFIG.support.url;sl.textContent=CONFIG.support.label;$('support').hidden=false;
+if(CONFIG.support&&CONFIG.support.enabled){
+  var sl=$('supportLinks');
+  CONFIG.support.links.forEach(function(l){if(!ok(l.url))return;var a=el('a','',l.label);a.href=l.url;a.target='_blank';a.rel='noopener';sl.appendChild(a)});
+  if(sl.children.length){$('supportText').textContent=CONFIG.support.text;$('support').hidden=false}
 }
 if(P&&P.code){
   var ct=$('codeText');ct.appendChild(document.createTextNode('Shop code '));ct.appendChild(el('b','',P.code));ct.appendChild(document.createTextNode(' for '+P.pct+'% off'));
